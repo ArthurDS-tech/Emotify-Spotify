@@ -5,8 +5,8 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
+const { connectDB } = require('./config/database');
 
-// Routes
 const authRoutes = require('./routes/auth');
 const emotionRoutes = require('./routes/emotion');
 const tracksRoutes = require('./routes/tracks');
@@ -14,54 +14,36 @@ const userRoutes = require('./routes/user');
 
 const app = express();
 
-// === SEGURANÇA ===
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+connectDB();
 
-// === LOGGING ===
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors({ origin: '*', credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(morgan('combined', { stream: { write: msg => logger.info(msg) } }));
-
-// === PARSER ===
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// === RATE LIMITING ===
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requisições por IP
-  message: 'Muitas requisições. Tente novamente mais tarde.',
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests',
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 app.use('/api/', limiter);
 
-// === ROTAS ===
 app.use('/api/auth', authRoutes);
 app.use('/api/emotion', emotionRoutes);
 app.use('/api/tracks', tracksRoutes);
 app.use('/api/user', userRoutes);
 
-// === HEALTH CHECK ===
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// === 404 ===
 app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Rota não encontrada',
-    path: req.path 
-  });
+  res.status(404).json({ error: 'Not found' });
 });
 
-// === ERROR HANDLER (deve ser o último) ===
 app.use(errorHandler);
 
 module.exports = app;

@@ -1,19 +1,56 @@
-<img src="https://raw.githubusercontent.com/MicaelliMedeiros/micaellimedeiros/master/image/computer-illustration.png" alt="ilustração de um computador" min-width="400px" max-width="400px" width="400px" align="right">
+# Emotify
 
-<p align="left"> 
-  Estou desenvolvendo um aplicativo aonde qualquer pessoa gratuitamente possa conectar sua conta do spotify e poder saber suas emoções por data etc <strong>Tudo programado até o momento em Javascript</strong>.<br>
-  Tudo isso em poucos segundos
-</p>
+Emotion analysis based on your Spotify music data.
 
-<p align="left">
-  🦄 Linguagens: Projeto em Desenvolvimento.
-</p>
+## Structure
 
-<p align="left">
-  💼 Ferramentas: VS code, Spotify api.
-</p>
+```
+emotify/
+├── backend/          # Node.js API
+└── frontend/         # React frontend
+```
 
-<p align="left">
-  <a href="#" title="LinkedIn">
-  <img src="https://img.shields.io/badge/-Linkedin-0e76a8?style=flat-square&logo=Linkedin&logoColor=white&link=www.linkedin.com/in/arthur-daniel-schuster-4486a1386" alt="LinkedIn"/></a>
-</p>
+## Quick Start
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Server: http://localhost:3000
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+App: http://localhost:8080
+
+## Setup
+
+1. Create Spotify app at https://developer.spotify.com/dashboard
+2. Add redirect URI: `http://localhost:3000/api/auth/callback`
+3. Configure `backend/.env`:
+
+```env
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:3000/api/auth/callback
+JWT_SECRET=your_secret
+REFRESH_TOKEN_SECRET=your_refresh_secret
+```
+
+4. Start MongoDB (optional):
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+```
+
+## License
+
+MIT

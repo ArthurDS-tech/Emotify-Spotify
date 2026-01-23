@@ -1,8 +1,9 @@
-# Dependências
+# Dependencies
 node_modules/
 package-lock.json
+bun.lockb
 
-# Variáveis de ambiente (NUNCA COMPARTILHAR)
+# Environment
 .env
 .env.local
 .env.*.local
@@ -10,9 +11,8 @@ package-lock.json
 # Logs
 logs/
 *.log
-npm-debug.log*
 
-# Sistema operacional
+# OS
 .DS_Store
 Thumbs.db
 
@@ -20,13 +20,12 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-*.swo
 
 # Build
 dist/
 build/
 
-# Dados sensíveis
+# Sensitive
 *.pem
 *.key
 *.cert

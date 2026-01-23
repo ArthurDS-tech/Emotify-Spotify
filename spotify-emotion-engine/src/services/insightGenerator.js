@@ -1,108 +1,92 @@
 class InsightGenerator {
-  static generateInsights(emotionScores, normalizedTracks, dominantEmotion) {
+  static generateInsights(emotionScores, normalizedFeatures, dominantEmotion) {
     const insights = [];
+    const avg = this._calculateAverages(normalizedFeatures);
 
-    // Insight 1: Emoção dominante
-    if (emotionScores[dominantEmotion.toLowerCase()] > 70) {
-      insights.push(
-        `Você teve picos de ${dominantEmotion} durante este período`
-      );
+    // Insight sobre emoção dominante
+    const emotionMessages = {
+      alegria: 'Suas músicas refletem um estado de espírito positivo e energético.',
+      melancolia: 'Você tem preferido músicas mais introspectivas e melancólicas.',
+      nostalgia: 'Suas escolhas musicais evocam memórias e sentimentos nostálgicos.',
+      calma: 'Você busca tranquilidade e relaxamento em suas músicas.',
+      euforia: 'Suas músicas são animadas e perfeitas para dançar.',
+      introspecção: 'Você aprecia músicas instrumentais e contemplativas.',
+      energia: 'Suas músicas são intensas e cheias de energia.'
+    };
+    insights.push(emotionMessages[dominantEmotion] || 'Seu gosto musical é diversificado.');
+
+    // Insight sobre energia
+    if (avg.energy > 0.7) {
+      insights.push('Você prefere músicas com alta energia e ritmo acelerado.');
+    } else if (avg.energy < 0.3) {
+      insights.push('Você tende a escolher músicas mais calmas e relaxantes.');
     }
 
-    // Insight 2: Tendência acústica
-    const avgAcoustic = (normalizedTracks.reduce((sum, t) => sum + (t.acousticness_norm || 0), 0) / normalizedTracks.length);
-    if (avgAcoustic > 60) {
-      insights.push(
-        'Músicas acústicas estão associadas a momentos de introspecção'
-      );
+    // Insight sobre valência
+    if (avg.valence > 0.6) {
+      insights.push('Suas músicas transmitem positividade e bom humor.');
+    } else if (avg.valence < 0.4) {
+      insights.push('Você se conecta com músicas de tom mais sério ou melancólico.');
     }
 
-    // Insight 3: Energia geral
-    const avgEnergy = (normalizedTracks.reduce((sum, t) => sum + (t.energy_norm || 0), 0) / normalizedTracks.length);
-    const highEnergyPercentage = (normalizedTracks.filter(t => (t.energy || 0) > 0.7).length / normalizedTracks.length) * 100;
-    
-    if (highEnergyPercentage > 50) {
-      insights.push(
-        'Preferência por músicas com alta energia e intensidade'
-      );
-    } else if (highEnergyPercentage < 30) {
-      insights.push(
-        'Você prefere músicas mais calmas e relaxantes'
-      );
+    // Insight sobre acústico
+    if (avg.acousticness > 0.5) {
+      insights.push('Você aprecia sons acústicos e orgânicos.');
     }
 
-    // Insight 4: Padrão emocional noturno
-    if (emotionScores.melancolia > 65) {
-      insights.push(
-        'Picos de melancolia foram detectados no período noturno'
-      );
+    // Insight sobre dançabilidade
+    if (avg.danceability > 0.7) {
+      insights.push('Suas músicas são perfeitas para dançar e se movimentar.');
     }
 
-    // Insight 5: Padrão geral
-    const avgValence = (normalizedTracks.reduce((sum, t) => sum + (t.valence_norm || 0), 0) / normalizedTracks.length);
-    if (avgValence > 60) {
-      insights.push(
-        'Seu padrão emocional é majoritariamente positivo e alegre'
-      );
-    } else if (avgValence < 40) {
-      insights.push(
-        'Seu padrão emocional é introspectivo e contemplativo'
-      );
-    } else {
-      insights.push(
-        'Seu padrão emocional é equilibrado entre diferentes humores'
-      );
-    }
-
-    // Insight 6: Danceability
-    const avgDance = (normalizedTracks.reduce((sum, t) => sum + (t.danceability_norm || 0), 0) / normalizedTracks.length);
-    if (avgDance > 65) {
-      insights.push(
-        'Você tem uma forte preferência por músicas para dançar'
-      );
-    }
-
-    return insights.slice(0, 6);
+    return insights.slice(0, 5);
   }
 
-  static generateEmotionalTimeline(emotionScores, periodDays = 7) {
+  static generateEmotionalTimeline(emotionScores) {
     const emotions = Object.entries(emotionScores)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([emotion]) => emotion);
+      .slice(0, 3);
 
-    const timeline = [];
-    const today = new Date();
-
-    for (let i = periodDays - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-
-      const emotionIndex = (periodDays - i) % emotions.length;
-      const emotion = emotions[emotionIndex];
-      const score = Math.round(40 + Math.random() * 50);
-
-      timeline.push({
-        day: dateStr,
-        emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-        score
-      });
-    }
-
-    return timeline;
+    return emotions.map(([emotion, score]) => ({
+      emotion,
+      score,
+      percentage: Math.round((score / 100) * 100)
+    }));
   }
 
-  static generateAverageAudioFeatures(tracks) {
-    const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-
+  static generateAverageAudioFeatures(audioFeatures) {
+    const avg = this._calculateAverages(audioFeatures);
     return {
-      danceability: Math.round(avg(tracks.map(t => (t.danceability || 0) * 100))),
-      energy: Math.round(avg(tracks.map(t => (t.energy || 0) * 100))),
-      acousticness: Math.round(avg(tracks.map(t => (t.acousticness || 0) * 100))),
-      valence: Math.round(avg(tracks.map(t => (t.valence || 0) * 100))),
-      instrumentalness: Math.round(avg(tracks.map(t => (t.instrumentalness || 0) * 100))),
-      tempo: Math.round(avg(tracks.map(t => t.tempo || 0)))
+      danceability: Math.round(avg.danceability * 100),
+      energy: Math.round(avg.energy * 100),
+      acousticness: Math.round(avg.acousticness * 100),
+      valence: Math.round(avg.valence * 100),
+      instrumentalness: Math.round(avg.instrumentalness * 100),
+      tempo: Math.round(avg.tempo)
+    };
+  }
+
+  static _calculateAverages(features) {
+    const sum = features.reduce((acc, f) => ({
+      danceability: acc.danceability + (f.danceability || 0),
+      energy: acc.energy + (f.energy || 0),
+      acousticness: acc.acousticness + (f.acousticness || 0),
+      valence: acc.valence + (f.valence || 0),
+      instrumentalness: acc.instrumentalness + (f.instrumentalness || 0),
+      tempo: acc.tempo + (f.tempo || 120)
+    }), {
+      danceability: 0, energy: 0, acousticness: 0,
+      valence: 0, instrumentalness: 0, tempo: 0
+    });
+
+    const count = features.length;
+    return {
+      danceability: sum.danceability / count,
+      energy: sum.energy / count,
+      acousticness: sum.acousticness / count,
+      valence: sum.valence / count,
+      instrumentalness: sum.instrumentalness / count,
+      tempo: sum.tempo / count
     };
   }
 }
