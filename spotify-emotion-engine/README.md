@@ -50,7 +50,6 @@ REFRESH_TOKEN_SECRET=sua_chave_refresh_aqui
 REFRESH_TOKEN_EXPIRY=30d
 
 # MongoDB
-MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/emotion-engine
 
 # Redis
 REDIS_HOST=localhost
