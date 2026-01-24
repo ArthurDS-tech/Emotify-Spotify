@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+package-lock.json
+bun.lockb
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Build
+dist/
+build/
+
+# Sensitive
+*.pem
+*.key
+*.cert
