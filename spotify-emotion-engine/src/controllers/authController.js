@@ -1,11 +1,65 @@
-// === src/controllers/authController.js ===
 const axios = require('axios');
 const User = require('../models/User');
 const TokenManager = require('../utils/tokenManager');
 const config = require('../config/spotify');
 const logger = require('../utils/logger');
 
+// Dados de demo para teste
+const DEMO_USER = {
+  id: 'demo_user_123',
+  email: 'demo@example.com',
+  display_name: 'Usuário Demo',
+  images: [{ url: 'https://via.placeholder.com/150' }],
+  country: 'BR'
+};
+
+const DEMO_TRACKS = [
+  {
+    id: 'track1',
+    name: 'Blinding Lights',
+    artists: [{ name: 'The Weeknd' }],
+    album: { name: 'After Hours' }
+  },
+  {
+    id: 'track2', 
+    name: 'Watermelon Sugar',
+    artists: [{ name: 'Harry Styles' }],
+    album: { name: 'Fine Line' }
+  }
+];
+
+const DEMO_AUDIO_FEATURES = [
+  {
+    id: 'track1',
+    danceability: 0.514,
+    energy: 0.73,
+    valence: 0.675,
+    acousticness: 0.001,
+    instrumentalness: 0.000,
+    tempo: 171.005
+  },
+  {
+    id: 'track2',
+    danceability: 0.548,
+    energy: 0.816,
+    valence: 0.557,
+    acousticness: 0.122,
+    instrumentalness: 0.000,
+    tempo: 95.079
+  }
+];
+
+const isDemoMode = () => {
+  return config.clientId === 'demo_client_id' || !config.clientId || config.clientId === 'your_spotify_client_id';
+};
+
 exports.getAuthUrl = (req, res) => {
+  if (isDemoMode()) {
+    // Modo demo - retorna URL fake
+    const demoUrl = `http://localhost:3000/demo-auth?code=demo_code_123&state=demo_state`;
+    return res.json({ authUrl: demoUrl });
+  }
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     response_type: 'code',
@@ -26,60 +80,60 @@ exports.callback = async (req, res) => {
       return res.status(400).json({ error: 'Código de autorização não fornecido' });
     }
 
-    // Trocar código por token Spotify
-    const tokenResponse = await axios.post(config.tokenUrl, {
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: config.redirectUri,
-      client_id: config.clientId,
-      client_secret: config.clientSecret
-    });
+    let spotifyProfile, spotifyToken, refreshToken;
 
-    const spotifyToken = tokenResponse.data.access_token;
-    const refreshToken = tokenResponse.data.refresh_token;
-    const expiresIn = tokenResponse.data.expires_in;
-
-    // Buscar perfil do usuário
-    const profileResponse = await axios.get('https://api.spotify.com/v1/me', {
-      headers: { 'Authorization': `Bearer ${spotifyToken}` }
-    });
-
-    const spotifyProfile = profileResponse.data;
-
-    // Criar ou atualizar usuário
-    let user = await User.findOne({ spotifyId: spotifyProfile.id });
-    
-    if (!user) {
-      user = new User({
-        spotifyId: spotifyProfile.id,
-        email: spotifyProfile.email,
-        name: spotifyProfile.display_name,
-        profileImage: spotifyProfile.images?.[0]?.url,
-        country: spotifyProfile.country
+    if (isDemoMode() || code === 'demo_code_123') {
+      // Modo demo
+      logger.info('Usando modo DEMO - dados simulados');
+      spotifyProfile = DEMO_USER;
+      spotifyToken = 'demo_access_token_123';
+      refreshToken = 'demo_refresh_token_123';
+    } else {
+      // Modo real
+      const tokenResponse = await axios.post(config.tokenUrl, {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: config.redirectUri,
+        client_id: config.clientId,
+        client_secret: config.clientSecret
       });
+
+      spotifyToken = tokenResponse.data.access_token;
+      refreshToken = tokenResponse.data.refresh_token;
+
+      const profileResponse = await axios.get('https://api.spotify.com/v1/me', {
+        headers: { 'Authorization': `Bearer ${spotifyToken}` }
+      });
+
+      spotifyProfile = profileResponse.data;
     }
 
-    user.spotifyAccessToken = spotifyToken;
-    user.spotifyRefreshToken = refreshToken;
-    user.tokenExpiresAt = new Date(Date.now() + expiresIn * 1000);
-    user.refreshToken = TokenManager.generateRefreshToken(user._id);
-
-    await user.save();
+    // Simular salvamento no banco (sem MongoDB)
+    const userData = {
+      _id: 'demo_user_id_123',
+      spotifyId: spotifyProfile.id,
+      email: spotifyProfile.email,
+      name: spotifyProfile.display_name,
+      profileImage: spotifyProfile.images?.[0]?.url,
+      country: spotifyProfile.country,
+      spotifyAccessToken: spotifyToken,
+      spotifyRefreshToken: refreshToken
+    };
 
     // Gerar tokens próprios
-    const accessToken = TokenManager.generateAccessToken(user._id, user.spotifyId);
-    const newRefreshToken = user.refreshToken;
+    const accessToken = TokenManager.generateAccessToken(userData._id, userData.spotifyId);
+    const newRefreshToken = TokenManager.generateRefreshToken(userData._id);
 
-    logger.info(`Usuario autenticado: ${user.email}`);
+    logger.info(`Usuario autenticado (${isDemoMode() ? 'DEMO' : 'REAL'}): ${userData.email}`);
 
     res.json({
       accessToken,
       refreshToken: newRefreshToken,
       user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        profileImage: user.profileImage
+        id: userData._id,
+        email: userData.email,
+        name: userData.name,
+        profileImage: userData.profileImage
       }
     });
   } catch (error) {
@@ -97,12 +151,7 @@ exports.refreshAccessToken = async (req, res) => {
       return res.status(401).json({ error: 'Refresh token inválido' });
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-
-    const newAccessToken = TokenManager.generateAccessToken(user._id, user.spotifyId);
+    const newAccessToken = TokenManager.generateAccessToken(decoded.userId, 'demo_spotify_id');
     
     res.json({ accessToken: newAccessToken });
   } catch (error) {
@@ -111,165 +160,8 @@ exports.refreshAccessToken = async (req, res) => {
   }
 };
 
-// === src/controllers/userController.js ===
-const User = require('../models/User');
-
-exports.getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId).select('-password');
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.updateProfile = async (req, res) => {
-  try {
-    const { name } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.user.userId,
-      { name, updatedAt: new Date() },
-      { new: true }
-    );
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// === src/controllers/emotionController.js ===
-const EmotionAnalysis = require('../models/EmotionAnalysis');
-const SpotifyService = require('../services/spotifyService');
-const EmotionEngine = require('../services/emotionEngine');
-const InsightGenerator = require('../services/insightGenerator');
-const CacheService = require('../services/cacheService');
-const User = require('../models/User');
-
-exports.analyzeEmotion = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { period = 'medium_term' } = req.query;
-
-    // Verificar cache
-    const cacheKey = `emotion:${userId}:${period}`;
-    const cachedData = await CacheService.get(cacheKey);
-    
-    if (cachedData) {
-      return res.json(cachedData);
-    }
-
-    // Buscar usuário e verificar token
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
-    }
-
-    // Inicializar serviço Spotify
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-
-    // Buscar top tracks
-    const tracks = await spotifyService.getTopTracks(period, 50);
-    
-    if (!tracks || tracks.length === 0) {
-      return res.status(400).json({ error: 'Nenhuma música encontrada' });
-    }
-
-    // Buscar audio features
-    const trackIds = tracks.map(t => t.id);
-    const audioFeatures = await spotifyService.getAudioFeatures(trackIds);
-
-    // Processar emoções
-    const normalized = EmotionEngine.normalizeFeatures(audioFeatures);
-    const emotionScores = EmotionEngine.calculateEmotionalScores(normalized);
-    const dominantEmotion = EmotionEngine.findDominantEmotion(emotionScores);
-    const balance = EmotionEngine.calculateBalance(emotionScores);
-
-    // Gerar insights e timeline
-    const insights = InsightGenerator.generateInsights(emotionScores, normalized, dominantEmotion);
-    const timeline = InsightGenerator.generateEmotionalTimeline(emotionScores);
-    const avgFeatures = InsightGenerator.generateAverageAudioFeatures(audioFeatures);
-
-    const result = {
-      dominantEmotion,
-      emotionalBalance: balance,
-      emotionalTimeline: timeline,
-      insights,
-      emotionBreakdown: emotionScores,
-      averageAudioFeatures: avgFeatures,
-      trackCount: tracks.length
-    };
-
-    // Salvar no banco
-    const analysis = new EmotionAnalysis({
-      userId,
-      period,
-      ...result
-    });
-    await analysis.save();
-
-    // Cachear resultado
-    await CacheService.set(cacheKey, result, 86400); // 24 horas
-
-    res.json(result);
-  } catch (error) {
-    logger.error('Emotion analysis error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getAnalysisHistory = async (req, res) => {
-  try {
-    const analyses = await EmotionAnalysis.find({ userId: req.user.userId })
-      .sort({ createdAt: -1 })
-      .limit(10);
-    res.json(analyses);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// === src/controllers/tracksController.js ===
-const TrackCache = require('../models/TrackCache');
-const SpotifyService = require('../services/spotifyService');
-const User = require('../models/User');
-
-exports.getTopTracks = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { period = 'medium_term', limit = 50 } = req.query;
-
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
-    }
-
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-    const tracks = await spotifyService.getTopTracks(period, parseInt(limit));
-
-    res.json(tracks);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getRecentlyPlayed = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { limit = 50 } = req.query;
-
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
-    }
-
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-    const tracks = await spotifyService.getRecentlyPlayed(parseInt(limit));
-
-    res.json(tracks);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// Exportar dados de demo para outros controladores
+exports.DEMO_USER = DEMO_USER;
+exports.DEMO_TRACKS = DEMO_TRACKS;
+exports.DEMO_AUDIO_FEATURES = DEMO_AUDIO_FEATURES;
+exports.isDemoMode = isDemoMode;

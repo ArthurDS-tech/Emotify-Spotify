@@ -1,274 +1,281 @@
-# 🎵 Spotify Emotion Engine - Backend
+<div align="center">
 
-Análise emocional avançada baseada em dados musicais do Spotify com Machine Learning.
+# 🎵 **Emotify** 
+### *Descubra as emoções por trás da sua música*
 
-## 📋 Pré-requisitos
+<img src="https://img.shields.io/badge/Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white" alt="Spotify">
+<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js">
+<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
 
-- **Node.js** >= 18.0.0
-- **MongoDB** >= 5.0
-- **Redis** >= 6.0
-- **Conta Spotify Developer** (https://developer.spotify.com)
+---
 
-## 🚀 Instalação
+<img width="600" alt="Emotify Preview" src="https://via.placeholder.com/600x300/1DB954/FFFFFF?text=🎵+Emotify+Preview">
 
-### 1. Clone o repositório
+*Transforme seus dados do Spotify em insights emocionais profundos*
 
+</div>
+
+## 🌟 **O que é o Emotify?**
+
+> **Emotify** é uma aplicação revolucionária que analisa seus hábitos musicais do Spotify e revela o **DNA emocional** das suas músicas favoritas. Descubra padrões ocultos, entenda seus estados de espírito através da música e conecte-se com pessoas que compartilham sua vibe musical.
+
+<div align="center">
+
+### 🎨 **Paleta Emocional**
+
+<table>
+<tr>
+<td align="center">
+<img src="https://via.placeholder.com/60x60/1DB954/FFFFFF?text=😊" width="60" height="60" style="border-radius: 50%;">
+<br><b>Alegria</b>
+<br><code>#1DB954</code>
+</td>
+<td align="center">
+<img src="https://via.placeholder.com/60x60/1ED760/FFFFFF?text=🎉" width="60" height="60" style="border-radius: 50%;">
+<br><b>Euforia</b>
+<br><code>#1ED760</code>
+</td>
+<td align="center">
+<img src="https://via.placeholder.com/60x60/191414/FFFFFF?text=😌" width="60" height="60" style="border-radius: 50%;">
+<br><b>Calma</b>
+<br><code>#191414</code>
+</td>
+<td align="center">
+<img src="https://via.placeholder.com/60x60/535353/FFFFFF?text=💭" width="60" height="60" style="border-radius: 50%;">
+<br><b>Nostalgia</b>
+<br><code>#535353</code>
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
+## ✨ **Funcionalidades Principais**
+
+<div align="center">
+
+| 🎯 **Análise Emocional** | 🎵 **Dados Reais** | 👥 **Social** | 📊 **Insights** |
+|:---:|:---:|:---:|:---:|
+| Algoritmo de IA que analisa valência, energia e dançabilidade | Integração completa com Spotify Web API | Conecte-se com pessoas de gosto musical similar | Visualizações interativas dos seus padrões |
+| 7 emoções diferentes identificadas | Top músicas, histórico real, audio features | Crie e compartilhe playlists colaborativas | Timeline emocional semanal |
+
+</div>
+
+### 🚀 **Principais Features**
+
+```typescript
+🎵 Análise Emocional Avançada
+├── 🧠 Engine de IA para processamento emocional
+├── 📈 7 categorias emocionais (Alegria, Melancolia, Nostalgia, etc.)
+├── ⚡ Análise de energia, valência e dançabilidade
+└── 📊 Insights personalizados baseados em seus dados
+
+🎶 Integração Real com Spotify
+├── 🔐 OAuth 2.0 seguro
+├── 🎵 Top músicas por período (curto/médio/longo prazo)
+├── ⏰ Histórico de reprodução em tempo real
+└── 🎨 Criação de playlists diretamente no Spotify
+
+👥 Recursos Sociais
+├── 🤝 Matching por compatibilidade musical
+├── 🎵 Playlists colaborativas
+├── 📱 Feed de atividades dos amigos
+└── 🌍 Descoberta de novos usuários
+
+📱 Interface Moderna
+├── 🎨 Design inspirado no Spotify
+├── 📱 Totalmente responsivo
+├── ⚡ Animações fluidas com Framer Motion
+└── 🌙 Suporte a tema escuro/claro
+```
+
+---
+
+## 🛠️ **Stack Tecnológica**
+
+<div align="center">
+
+### **Frontend** 
+<img src="https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js">
+<img src="https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+<img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind">
+<img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white" alt="Framer Motion">
+
+### **Backend**
+<img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
+<img src="https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
+<img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB">
+<img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis">
+<img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white" alt="JWT">
+
+### **APIs & Integrações**
+<img src="https://img.shields.io/badge/Spotify_Web_API-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Spotify API">
+<img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase">
+
+</div>
+
+---
+
+## 🚀 **Instalação e Configuração**
+
+### **Pré-requisitos**
+- Node.js 18+ 
+- MongoDB (local ou Atlas)
+- Redis (opcional)
+- Conta de desenvolvedor do Spotify
+
+### **1. Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/spotify-emotion-engine.git
+git clone https://github.com/seu-usuario/emotify.git
+cd emotify
+```
+
+### **2. Configure o Backend**
+```bash
 cd spotify-emotion-engine
-```
-
-### 2. Instale dependências
-
-```bash
 npm install
-```
 
-### 3. Configure variáveis de ambiente
-
-```bash
+# Configure as variáveis de ambiente
 cp .env.example .env
+# Edite o .env com suas credenciais do Spotify
 ```
 
-Preencha o arquivo `.env`:
-
-```env
-# Servidor
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
-
-# Spotify OAuth
-SPOTIFY_CLIENT_ID=seu_id_aqui
-SPOTIFY_CLIENT_SECRET=seu_secret_aqui
-SPOTIFY_REDIRECT_URI=http://localhost:5000/api/auth/callback
-
-# JWT
-JWT_SECRET=sua_chave_super_secreta_aqui
-JWT_EXPIRY=7d
-REFRESH_TOKEN_SECRET=sua_chave_refresh_aqui
-REFRESH_TOKEN_EXPIRY=30d
-
-# MongoDB
-MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/emotion-engine
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-```
-
-### 4. Crie aplicação no Spotify Developer
-
-1. Acesse https://developer.spotify.com/dashboard
-2. Faça login ou crie uma conta
-3. Clique em "Create an App"
-4. Aceite os termos e crie
-5. Copie `Client ID` e `Client Secret` para o `.env`
-6. Configure Redirect URIs: `http://localhost:5000/api/auth/callback`
-
-### 5. Inicie os serviços
-
-**MongoDB:**
+### **3. Configure o Frontend**
 ```bash
-# Local
-mongod
+cd Front/Spotify-frontend
+npm install
 
-# Ou com Docker
-docker run -d -p 27017:27017 --name mongodb mongo:latest
+# Configure as variáveis de ambiente
+cp .env.example .env.local
 ```
 
-**Redis:**
+### **4. Configuração do Spotify**
+1. Acesse [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Crie uma nova aplicação
+3. Configure as URLs de redirecionamento:
+   - `http://localhost:3001/api/auth/callback`
+4. Copie `Client ID` e `Client Secret` para o `.env`
+
+### **5. Execute o projeto**
 ```bash
-# Local
-redis-server
-
-# Ou com Docker
-docker run -d -p 6379:6379 --name redis redis:latest
-```
-
-### 6. Inicie o servidor
-
-```bash
-# Desenvolvimento
-npm run dev
-
-# Produção
+# Terminal 1 - Backend
+cd spotify-emotion-engine
 npm start
+
+# Terminal 2 - Frontend  
+cd Front/Spotify-frontend
+npm run dev
 ```
 
-Servidor rodará em `http://localhost:5000`
+<div align="center">
 
-## 📚 Endpoints da API
+🎉 **Acesse:** `http://localhost:3000`
 
-### Autenticação
+</div>
 
-**GET** `/api/auth/url`
-- Retorna URL de autenticação Spotify
-- Resposta: `{ authUrl: "https://..." }`
+---
 
-**GET** `/api/auth/callback?code=...`
-- Callback do OAuth Spotify
-- Retorna: `{ accessToken, refreshToken, user }`
+## 📸 **Screenshots**
 
-**POST** `/api/auth/refresh`
-- Renova token de acesso
-- Body: `{ refreshToken }`
+<div align="center">
 
-### Usuário
+### 🏠 **Dashboard Principal**
+<img src="https://via.placeholder.com/800x400/1DB954/FFFFFF?text=🏠+Dashboard+Principal" alt="Dashboard" width="800">
 
-**GET** `/api/user/profile`
-- Requer: `Authorization: Bearer <token>`
-- Retorna perfil do usuário
+### 📊 **Análise Emocional**
+<img src="https://via.placeholder.com/800x400/191414/1DB954?text=📊+Análise+Emocional" alt="Análise" width="800">
 
-**PUT** `/api/user/profile`
-- Atualiza perfil
-- Body: `{ name }`
+### 👥 **Área Social**
+<img src="https://via.placeholder.com/800x400/1ED760/FFFFFF?text=👥+Área+Social" alt="Social" width="800">
 
-### Análise Emocional
+</div>
 
-**GET** `/api/emotion/analyze?period=medium_term`
-- Analisa emoções baseado no histórico
-- Parâmetros: `period` (short_term|medium_term|long_term)
-- Retorna:
-```json
-{
-  "dominantEmotion": "Nostalgia",
-  "emotionalBalance": 72,
-  "emotionalTimeline": [...],
-  "insights": [...],
-  "emotionBreakdown": {...},
-  "averageAudioFeatures": {...}
-}
+---
+
+## 🎯 **Como Funciona a Análise Emocional**
+
+<div align="center">
+
+```mermaid
+graph TD
+    A[🎵 Suas Músicas] --> B[📊 Audio Features]
+    B --> C[🧠 Engine Emocional]
+    C --> D[📈 Scores Emocionais]
+    D --> E[🎨 Visualização]
+    
+    B --> F[Valência<br/>Energia<br/>Dançabilidade<br/>Acústica]
+    F --> G[Algoritmo de IA]
+    G --> H[7 Emoções<br/>Identificadas]
 ```
 
-**GET** `/api/emotion/history`
-- Histórico de análises
-- Retorna: Array de análises anteriores
+</div>
 
-### Tracks
+### **Emoções Detectadas:**
+- 😊 **Alegria** - Músicas positivas e energéticas
+- 😢 **Melancolia** - Faixas introspectivas e melancólicas  
+- 💭 **Nostalgia** - Sons que evocam memórias
+- 😌 **Calma** - Músicas relaxantes e tranquilas
+- 🎉 **Euforia** - Tracks para dançar e celebrar
+- 🤔 **Introspecção** - Músicas para reflexão
+- ⚡ **Energia** - Faixas que te fazem mover
 
-**GET** `/api/tracks/top?period=medium_term&limit=50`
-- Top tracks do usuário
-- Retorna: Array de tracks
+---
 
-**GET** `/api/tracks/recently-played?limit=50`
-- Músicas tocadas recentemente
-- Retorna: Array de tracks
+## 🤝 **Contribuindo**
 
-## 🧠 Emotion Engine
+<div align="center">
 
-### Fórmulas Emocionais
+Adoramos contribuições! 🎵
 
-```javascript
-alegria = (valence × 0.7) + (energy × 0.3)
-melancolia = ((100 - valence) × 0.6) + (acousticness × 0.4)
-nostalgia = (acousticness × 0.5) + ((100 - energy) × 0.3) + (|valence - 50| × 0.2)
-calma = ((100 - energy) × 0.5) + (acousticness × 0.5)
-euforia = (energy × 0.4) + (valence × 0.4) + (danceability × 0.2)
-introspecção = (instrumentalness × 0.4) + (acousticness × 0.4) + ((100 - valence) × 0.2)
-energia = (energy × 0.6) + (danceability × 0.4)
-```
+</div>
 
-### Audio Features
+### **Como contribuir:**
 
-- **danceability**: 0-1 (quanto é dançável)
-- **energy**: 0-1 (intensidade e atividade)
-- **acousticness**: 0-1 (uso de instrumentos acústicos)
-- **valence**: 0-1 (positividade musical)
-- **instrumentalness**: 0-1 (presença de vocais)
-- **tempo**: BPM da música
+1. **Fork** o projeto
+2. Crie uma **branch** para sua feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um **Pull Request**
 
-## 🔐 Segurança
+### **Áreas que precisam de ajuda:**
+- 🎨 Melhorias no design/UX
+- 🧠 Algoritmos de análise emocional
+- 🌐 Internacionalização
+- 📱 App mobile (React Native)
+- 🔧 Otimizações de performance
 
-- ✅ CORS configurado
-- ✅ Rate limiting (100 req/15min)
-- ✅ JWT com expiração
-- ✅ Senhas com bcrypt
-- ✅ Helmet para headers segurança
-- ✅ Validação com Joi
-- ✅ Tokens Spotify nunca expostos
+---
 
-## 📊 Estrutura do Banco de Dados
+## 📄 **Licença**
 
-### Users
-```javascript
-{
-  spotifyId: String,
-  email: String,
-  name: String,
-  spotifyAccessToken: String,
-  spotifyRefreshToken: String,
-  tokenExpiresAt: Date
-}
-```
+<div align="center">
 
-### EmotionAnalysis
-```javascript
-{
-  userId: ObjectId,
-  period: String,
-  dominantEmotion: String,
-  emotionalBalance: Number,
-  emotionBreakdown: Object,
-  emotionalTimeline: Array,
-  insights: Array
-}
-```
+Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-### TrackCache
-```javascript
-{
-  userId: ObjectId,
-  spotifyTrackId: String,
-  audioFeatures: Object,
-  cachedAt: Date (TTL: 30 dias)
-}
-```
+---
 
-## 🐛 Troubleshooting
+### 🎵 **Feito com ❤️ e muita música**
 
-**"Token expirado"**
-- Use POST `/api/auth/refresh` com refreshToken
+<img src="https://img.shields.io/badge/Made_with-❤️-1DB954?style=for-the-badge" alt="Made with Love">
+<img src="https://img.shields.io/badge/Powered_by-Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white" alt="Powered by Spotify">
 
-**"Muitas requisições"**
-- Rate limit: 30 req/min para Spotify
-- Aguarde 1 minuto
+**Desenvolvido por:** [Seu Nome](https://github.com/seu-usuario)
 
-**"MongoDB não conecta"**
-- Verifique URI em .env
-- Certifique-se que mongod está rodando
+</div>
 
-**"Redis não conecta"**
-- Cache funciona sem Redis
-- Mas análises serão mais lentas
+---
 
-## 📝 Variáveis de Ambiente Completas
+<div align="center">
 
-Veja `.env.example` para todas as variáveis disponíveis.
+### 🌟 **Se você gostou, deixe uma estrela!** ⭐
 
-## 🚀 Deployment
+<img src="https://img.shields.io/github/stars/seu-usuario/emotify?style=social" alt="GitHub stars">
+<img src="https://img.shields.io/github/forks/seu-usuario/emotify?style=social" alt="GitHub forks">
+<img src="https://img.shields.io/github/watchers/seu-usuario/emotify?style=social" alt="GitHub watchers">
 
-### Heroku
-```bash
-heroku login
-heroku create seu-app
-heroku config:set JWT_SECRET=...
-git push heroku main
-```
-
-### Docker
-```bash
-docker build -t emotion-engine .
-docker run -p 5000:5000 emotion-engine
-```
-
-## 📞 Suporte
-
-Para problemas:
-1. Verifique logs em `logs/app.log`
-2. Consulte documentação Spotify: https://developer.spotify.com/documentation
-3. Abra uma issue no GitHub
-
-## 📄 Licença
-
-MIT
+</div>

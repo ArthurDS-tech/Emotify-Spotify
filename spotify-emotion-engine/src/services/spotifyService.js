@@ -1,21 +1,101 @@
-// === src/services/spotifyService.js ===
 const axios = require('axios');
 const logger = require('../utils/logger');
 const config = require('../config/spotify');
 
+// Dados de demo
+const DEMO_TRACKS = [
+  {
+    id: 'track1',
+    name: 'Blinding Lights',
+    artists: [{ name: 'The Weeknd' }],
+    album: { name: 'After Hours' },
+    external_urls: { spotify: 'https://open.spotify.com/track/demo1' }
+  },
+  {
+    id: 'track2',
+    name: 'Watermelon Sugar', 
+    artists: [{ name: 'Harry Styles' }],
+    album: { name: 'Fine Line' },
+    external_urls: { spotify: 'https://open.spotify.com/track/demo2' }
+  },
+  {
+    id: 'track3',
+    name: 'Levitating',
+    artists: [{ name: 'Dua Lipa' }],
+    album: { name: 'Future Nostalgia' },
+    external_urls: { spotify: 'https://open.spotify.com/track/demo3' }
+  }
+];
+
+const DEMO_AUDIO_FEATURES = [
+  {
+    id: 'track1',
+    danceability: 0.514,
+    energy: 0.73,
+    valence: 0.675,
+    acousticness: 0.001,
+    instrumentalness: 0.000,
+    tempo: 171.005
+  },
+  {
+    id: 'track2',
+    danceability: 0.548,
+    energy: 0.816,
+    valence: 0.557,
+    acousticness: 0.122,
+    instrumentalness: 0.000,
+    tempo: 95.079
+  },
+  {
+    id: 'track3',
+    danceability: 0.702,
+    energy: 0.825,
+    valence: 0.915,
+    acousticness: 0.011,
+    instrumentalness: 0.000,
+    tempo: 103.0
+  }
+];
+
+const DEMO_PLAYLISTS = {
+  items: [
+    {
+      id: 'playlist1',
+      name: 'Minha Playlist Demo',
+      description: 'Playlist criada no modo demo',
+      public: true,
+      owner: { id: 'demo_user', display_name: 'Usuário Demo' },
+      tracks: { total: 15 },
+      followers: { total: 5 },
+      external_urls: { spotify: 'https://open.spotify.com/playlist/demo1' },
+      images: [{ url: 'https://via.placeholder.com/300' }]
+    }
+  ],
+  total: 1
+};
+
 class SpotifyService {
   constructor(accessToken) {
     this.accessToken = accessToken;
-    this.client = axios.create({
-      baseURL: config.baseUrl,
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    this.isDemoMode = accessToken === 'demo_access_token_123' || !config.clientId || config.clientId === 'demo_client_id';
+    
+    if (!this.isDemoMode) {
+      this.client = axios.create({
+        baseURL: config.baseUrl,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
   }
 
   async getTopTracks(period = 'medium_term', limit = 50) {
+    if (this.isDemoMode) {
+      logger.info('Retornando top tracks DEMO');
+      return DEMO_TRACKS.slice(0, Math.min(limit, DEMO_TRACKS.length));
+    }
+
     try {
       const response = await this.client.get('/me/top/tracks', {
         params: { time_range: period, limit, offset: 0 }
@@ -28,11 +108,16 @@ class SpotifyService {
   }
 
   async getRecentlyPlayed(limit = 50) {
+    if (this.isDemoMode) {
+      logger.info('Retornando recently played DEMO');
+      return DEMO_TRACKS.map(track => ({ track })).slice(0, Math.min(limit, DEMO_TRACKS.length));
+    }
+
     try {
       const response = await this.client.get('/me/player/recently-played', {
         params: { limit }
       });
-      return response.data.items.map(item => item.track);
+      return response.data.items;
     } catch (error) {
       logger.error('Error fetching recently played:', error.message);
       throw error;
@@ -40,6 +125,11 @@ class SpotifyService {
   }
 
   async getAudioFeatures(trackIds) {
+    if (this.isDemoMode) {
+      logger.info('Retornando audio features DEMO');
+      return DEMO_AUDIO_FEATURES.filter(f => trackIds.includes(f.id));
+    }
+
     try {
       const batches = [];
       for (let i = 0; i < trackIds.length; i += 100) {
@@ -61,6 +151,16 @@ class SpotifyService {
   }
 
   async getProfile() {
+    if (this.isDemoMode) {
+      return {
+        id: 'demo_user_123',
+        email: 'demo@example.com',
+        display_name: 'Usuário Demo',
+        images: [{ url: 'https://via.placeholder.com/150' }],
+        country: 'BR'
+      };
+    }
+
     try {
       const response = await this.client.get('/me');
       return response.data;
@@ -70,120 +170,69 @@ class SpotifyService {
     }
   }
 
-  async refreshAccessToken(refreshToken) {
+  async createPlaylist(userId, playlistData) {
+    if (this.isDemoMode) {
+      logger.info('Criando playlist DEMO:', playlistData.name);
+      return {
+        id: 'demo_playlist_' + Date.now(),
+        name: playlistData.name,
+        description: playlistData.description,
+        public: playlistData.public,
+        owner: { id: userId, display_name: 'Usuário Demo' },
+        tracks: { total: 0 },
+        followers: { total: 0 },
+        external_urls: { spotify: 'https://open.spotify.com/playlist/demo' },
+        images: []
+      };
+    }
+
     try {
-      const response = await axios.post(config.tokenUrl, {
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: config.clientId,
-        client_secret: config.clientSecret
+      const response = await this.client.post(`/users/${userId}/playlists`, {
+        name: playlistData.name,
+        description: playlistData.description || '',
+        public: playlistData.public !== undefined ? playlistData.public : true,
+        collaborative: playlistData.collaborative || false
       });
-      return response.data.access_token;
+      return response.data;
     } catch (error) {
-      logger.error('Error refreshing token:', error.message);
+      logger.error('Error creating playlist:', error.message);
+      throw error;
+    }
+  }
+
+  async getUserPlaylists(limit = 50, offset = 0) {
+    if (this.isDemoMode) {
+      logger.info('Retornando playlists DEMO');
+      return DEMO_PLAYLISTS;
+    }
+
+    try {
+      const response = await this.client.get('/me/playlists', {
+        params: { limit, offset }
+      });
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching playlists:', error.message);
+      throw error;
+    }
+  }
+
+  async addTracksToPlaylist(playlistId, trackUris) {
+    if (this.isDemoMode) {
+      logger.info('Adicionando tracks à playlist DEMO:', playlistId);
+      return { snapshot_id: 'demo_snapshot_' + Date.now() };
+    }
+
+    try {
+      const response = await this.client.post(`/playlists/${playlistId}/tracks`, {
+        uris: trackUris
+      });
+      return response.data;
+    } catch (error) {
+      logger.error('Error adding tracks to playlist:', error.message);
       throw error;
     }
   }
 }
 
 module.exports = SpotifyService;
-
-// === src/services/emotionEngine.js ===
-class EmotionEngine {
-  static normalizeFeatures(tracks) {
-    return tracks.map(track => ({
-      ...track,
-      danceability_norm: (track.danceability || 0) * 100,
-      energy_norm: (track.energy || 0) * 100,
-      acousticness_norm: (track.acousticness || 0) * 100,
-      valence_norm: (track.valence || 0) * 100,
-      instrumentalness_norm: (track.instrumentalness || 0) * 100
-    }));
-  }
-
-  static calculateEmotionalScores(tracks) {
-    const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-
-    const avgDance = avg(tracks.map(t => t.danceability_norm));
-    const avgEnergy = avg(tracks.map(t => t.energy_norm));
-    const avgAcoustic = avg(tracks.map(t => t.acousticness_norm));
-    const avgValence = avg(tracks.map(t => t.valence_norm));
-    const avgInstrumental = avg(tracks.map(t => t.instrumentalness_norm));
-
-    return {
-      alegria: (avgValence * 0.7 + avgEnergy * 0.3),
-      melancolia: ((100 - avgValence) * 0.6 + avgAcoustic * 0.4),
-      nostalgia: (avgAcoustic * 0.5 + (100 - avgEnergy) * 0.3 + Math.abs(avgValence - 50) * 0.2),
-      calma: ((100 - avgEnergy) * 0.5 + avgAcoustic * 0.5),
-      euforia: (avgEnergy * 0.4 + avgValence * 0.4 + avgDance * 0.2),
-      introspecção: (avgInstrumental * 0.4 + avgAcoustic * 0.4 + (100 - avgValence) * 0.2),
-      energia: (avgEnergy * 0.6 + avgDance * 0.4)
-    };
-  }
-
-  static findDominantEmotion(scores) {
-    return Object.entries(scores).reduce((max, [emotion, score]) => 
-      score > max.score ? { emotion, score } : max
-    , { emotion: 'Neutra', score: 0 }).emotion;
-  }
-
-  static calculateBalance(scores) {
-    const values = Object.values(scores);
-    const avg = values.reduce((a, b) => a + b) / values.length;
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
-    return Math.round(100 - Math.sqrt(variance));
-  }
-}
-
-module.exports = EmotionEngine;
-
-// === src/services/cacheService.js ===
-const redisClient = require('../config/redis');
-const logger = require('../utils/logger');
-
-class CacheService {
-  static async get(key) {
-    try {
-      const data = await redisClient.get(key);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      logger.error('Cache get error:', error.message);
-      return null;
-    }
-  }
-
-  static async set(key, value, expiresIn = 3600) {
-    try {
-      await redisClient.setex(key, expiresIn, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      logger.error('Cache set error:', error.message);
-      return false;
-    }
-  }
-
-  static async delete(key) {
-    try {
-      await redisClient.del(key);
-      return true;
-    } catch (error) {
-      logger.error('Cache delete error:', error.message);
-      return false;
-    }
-  }
-
-  static async invalidateUserCache(userId) {
-    try {
-      const keys = await redisClient.keys(`emotion:${userId}:*`);
-      if (keys.length) {
-        await redisClient.del(keys);
-      }
-      return true;
-    } catch (error) {
-      logger.error('Cache invalidation error:', error.message);
-      return false;
-    }
-  }
-}
-
-module.exports = CacheService;

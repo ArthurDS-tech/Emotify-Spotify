@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const emotionRoutes = require('./routes/emotion');
 const tracksRoutes = require('./routes/tracks');
 const userRoutes = require('./routes/user');
+const playlistRoutes = require('./routes/playlists');
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/emotion', emotionRoutes);
 app.use('/api/tracks', tracksRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/playlists', playlistRoutes);
 
 // === HEALTH CHECK ===
 app.get('/api/health', (req, res) => {

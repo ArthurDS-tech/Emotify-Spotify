@@ -1,109 +1,67 @@
 class InsightGenerator {
-  static generateInsights(emotionScores, normalizedTracks, dominantEmotion) {
+  static generateInsights(emotionScores, audioFeatures, dominantEmotion) {
     const insights = [];
-
-    // Insight 1: Emoção dominante
-    if (emotionScores[dominantEmotion.toLowerCase()] > 70) {
-      insights.push(
-        `Você teve picos de ${dominantEmotion} durante este período`
-      );
-    }
-
-    // Insight 2: Tendência acústica
-    const avgAcoustic = (normalizedTracks.reduce((sum, t) => sum + (t.acousticness_norm || 0), 0) / normalizedTracks.length);
-    if (avgAcoustic > 60) {
-      insights.push(
-        'Músicas acústicas estão associadas a momentos de introspecção'
-      );
-    }
-
-    // Insight 3: Energia geral
-    const avgEnergy = (normalizedTracks.reduce((sum, t) => sum + (t.energy_norm || 0), 0) / normalizedTracks.length);
-    const highEnergyPercentage = (normalizedTracks.filter(t => (t.energy || 0) > 0.7).length / normalizedTracks.length) * 100;
     
-    if (highEnergyPercentage > 50) {
-      insights.push(
-        'Preferência por músicas com alta energia e intensidade'
-      );
-    } else if (highEnergyPercentage < 30) {
-      insights.push(
-        'Você prefere músicas mais calmas e relaxantes'
-      );
+    // Análise da emoção dominante
+    if (emotionScores.alegria > 70) {
+      insights.push('Suas músicas refletem um estado de espírito muito positivo');
+    } else if (emotionScores.melancolia > 60) {
+      insights.push('Você tem preferência por músicas mais introspectivas');
     }
 
-    // Insight 4: Padrão emocional noturno
-    if (emotionScores.melancolia > 65) {
-      insights.push(
-        'Picos de melancolia foram detectados no período noturno'
-      );
+    // Análise de energia
+    const avgEnergy = this.calculateAverage(audioFeatures, 'energy');
+    if (avgEnergy > 0.7) {
+      insights.push('Você prefere músicas com alta energia');
+    } else if (avgEnergy < 0.4) {
+      insights.push('Suas músicas tendem a ser mais calmas e relaxantes');
     }
 
-    // Insight 5: Padrão geral
-    const avgValence = (normalizedTracks.reduce((sum, t) => sum + (t.valence_norm || 0), 0) / normalizedTracks.length);
-    if (avgValence > 60) {
-      insights.push(
-        'Seu padrão emocional é majoritariamente positivo e alegre'
-      );
-    } else if (avgValence < 40) {
-      insights.push(
-        'Seu padrão emocional é introspectivo e contemplativo'
-      );
-    } else {
-      insights.push(
-        'Seu padrão emocional é equilibrado entre diferentes humores'
-      );
+    // Análise de dançabilidade
+    const avgDance = this.calculateAverage(audioFeatures, 'danceability');
+    if (avgDance > 0.7) {
+      insights.push('Suas músicas são perfeitas para dançar');
     }
 
-    // Insight 6: Danceability
-    const avgDance = (normalizedTracks.reduce((sum, t) => sum + (t.danceability_norm || 0), 0) / normalizedTracks.length);
-    if (avgDance > 65) {
-      insights.push(
-        'Você tem uma forte preferência por músicas para dançar'
-      );
-    }
-
-    return insights.slice(0, 6);
+    return insights.slice(0, 3); // Máximo 3 insights
   }
 
-  static generateEmotionalTimeline(emotionScores, periodDays = 7) {
-    const emotions = Object.entries(emotionScores)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([emotion]) => emotion);
-
+  static generateEmotionalTimeline(emotionScores) {
     const timeline = [];
-    const today = new Date();
-
-    for (let i = periodDays - 1; i >= 0; i--) {
-      const date = new Date(today);
+    const emotions = Object.keys(emotionScores);
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-
-      const emotionIndex = (periodDays - i) % emotions.length;
-      const emotion = emotions[emotionIndex];
-      const score = Math.round(40 + Math.random() * 50);
-
+      
+      const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
       timeline.push({
-        day: dateStr,
-        emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-        score
+        date,
+        emotion: randomEmotion,
+        intensity: Math.round(emotionScores[randomEmotion])
       });
     }
-
-    return timeline;
+    
+    return timeline.reverse();
   }
 
-  static generateAverageAudioFeatures(tracks) {
-    const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  static generateAverageAudioFeatures(audioFeatures) {
+    if (!audioFeatures || audioFeatures.length === 0) return {};
 
-    return {
-      danceability: Math.round(avg(tracks.map(t => (t.danceability || 0) * 100))),
-      energy: Math.round(avg(tracks.map(t => (t.energy || 0) * 100))),
-      acousticness: Math.round(avg(tracks.map(t => (t.acousticness || 0) * 100))),
-      valence: Math.round(avg(tracks.map(t => (t.valence || 0) * 100))),
-      instrumentalness: Math.round(avg(tracks.map(t => (t.instrumentalness || 0) * 100))),
-      tempo: Math.round(avg(tracks.map(t => t.tempo || 0)))
-    };
+    const features = ['danceability', 'energy', 'valence', 'acousticness', 'instrumentalness', 'tempo'];
+    const averages = {};
+
+    features.forEach(feature => {
+      averages[feature] = this.calculateAverage(audioFeatures, feature);
+    });
+
+    return averages;
+  }
+
+  static calculateAverage(array, property) {
+    if (!array || array.length === 0) return 0;
+    const sum = array.reduce((acc, item) => acc + (item[property] || 0), 0);
+    return sum / array.length;
   }
 }
 
