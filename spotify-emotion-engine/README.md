@@ -11,8 +11,6 @@
 
 ---
 
-<img width="600" alt="Emotify Preview" src="https://via.placeholder.com/600x300/1DB954/FFFFFF?text=🎵+Emotify+Preview">
-
 *Transforme seus dados do Spotify em insights emocionais profundos*
 
 </div>
@@ -22,35 +20,6 @@
 > **Emotify** é uma aplicação revolucionária que analisa seus hábitos musicais do Spotify e revela o **DNA emocional** das suas músicas favoritas. Descubra padrões ocultos, entenda seus estados de espírito através da música e conecte-se com pessoas que compartilham sua vibe musical.
 
 <div align="center">
-
-### 🎨 **Paleta Emocional**
-
-<table>
-<tr>
-<td align="center">
-<img src="https://via.placeholder.com/60x60/1DB954/FFFFFF?text=😊" width="60" height="60" style="border-radius: 50%;">
-<br><b>Alegria</b>
-<br><code>#1DB954</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/60x60/1ED760/FFFFFF?text=🎉" width="60" height="60" style="border-radius: 50%;">
-<br><b>Euforia</b>
-<br><code>#1ED760</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/60x60/191414/FFFFFF?text=😌" width="60" height="60" style="border-radius: 50%;">
-<br><b>Calma</b>
-<br><code>#191414</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/60x60/535353/FFFFFF?text=💭" width="60" height="60" style="border-radius: 50%;">
-<br><b>Nostalgia</b>
-<br><code>#535353</code>
-</td>
-</tr>
-</table>
-
-</div>
 
 ---
 
