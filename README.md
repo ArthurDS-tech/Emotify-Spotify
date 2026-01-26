@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎵 **Emotify** 
+#  **Emotify** 
 ### *Descubra as emoções por trás da sua música*
 
 <img src="https://img.shields.io/badge/Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white" alt="Spotify">
@@ -15,7 +15,7 @@
 
 </div>
 
-## 🌟 **O que é o Emotify?**
+##  **O que é o Emotify?**
 
 > **Emotify** é uma aplicação revolucionária que analisa seus hábitos musicais do Spotify e revela o **DNA emocional** das suas músicas favoritas. Descubra padrões ocultos, entenda seus estados de espírito através da música e conecte-se com pessoas que compartilham sua vibe musical.
 
@@ -23,11 +23,11 @@
 
 ---
 
-## ✨ **Funcionalidades Principais**
+## **Funcionalidades Principais**
 
 <div align="center">
 
-| 🎯 **Análise Emocional** | 🎵 **Dados Reais** | 👥 **Social** | 📊 **Insights** |
+|  **Análise Emocional** |  **Dados Reais** |  **Social** |  **Insights** |
 |:---:|:---:|:---:|:---:|
 | Algoritmo de IA que analisa valência, energia e dançabilidade | Integração completa com Spotify Web API | Conecte-se com pessoas de gosto musical similar | Visualizações interativas dos seus padrões |
 | 7 emoções diferentes identificadas | Top músicas, histórico real, audio features | Crie e compartilhe playlists colaborativas | Timeline emocional semanal |
@@ -37,34 +37,34 @@
 ### 🚀 **Principais Features**
 
 ```typescript
-🎵 Análise Emocional Avançada
-├── 🧠 Engine de IA para processamento emocional
-├── 📈 7 categorias emocionais (Alegria, Melancolia, Nostalgia, etc.)
-├── ⚡ Análise de energia, valência e dançabilidade
-└── 📊 Insights personalizados baseados em seus dados
+ Análise Emocional Avançada
+├──  Engine de IA para processamento emocional
+├──  7 categorias emocionais (Alegria, Melancolia, Nostalgia, etc.)
+├──  Análise de energia, valência e dançabilidade
+└──  Insights personalizados baseados em seus dados
 
-🎶 Integração Real com Spotify
-├── 🔐 OAuth 2.0 seguro
-├── 🎵 Top músicas por período (curto/médio/longo prazo)
-├── ⏰ Histórico de reprodução em tempo real
-└── 🎨 Criação de playlists diretamente no Spotify
+ Integração Real com Spotify
+├──  OAuth 2.0 seguro
+├──  Top músicas por período (curto/médio/longo prazo)
+├──  Histórico de reprodução em tempo real
+└──  Criação de playlists diretamente no Spotify
 
-👥 Recursos Sociais
-├── 🤝 Matching por compatibilidade musical
-├── 🎵 Playlists colaborativas
-├── 📱 Feed de atividades dos amigos
-└── 🌍 Descoberta de novos usuários
+ Recursos Sociais
+├──  Matching por compatibilidade musical
+├──  Playlists colaborativas
+├──  Feed de atividades dos amigos
+└──  Descoberta de novos usuários
 
-📱 Interface Moderna
-├── 🎨 Design inspirado no Spotify
-├── 📱 Totalmente responsivo
-├── ⚡ Animações fluidas com Framer Motion
-└── 🌙 Suporte a tema escuro/claro
+ Interface Moderna
+├──  Design inspirado no Spotify
+├──  Totalmente responsivo
+├──  Animações fluidas com Framer Motion
+└──  Suporte a tema escuro/claro
 ```
 
 ---
 
-## 🛠️ **Stack Tecnológica**
+##  **Stack Tecnológica**
 
 <div align="center">
 
@@ -212,11 +212,11 @@ Adoramos contribuições! 🎵
 5. Abra um **Pull Request**
 
 ### **Áreas que precisam de ajuda:**
-- 🎨 Melhorias no design/UX
-- 🧠 Algoritmos de análise emocional
-- 🌐 Internacionalização
-- 📱 App mobile (React Native)
-- 🔧 Otimizações de performance
+-  Melhorias no design/UX
+-  Algoritmos de análise emocional
+-  Internacionalização
+-  App mobile (React Native)
+-  Otimizações de performance
 
 ---
 
@@ -241,7 +241,7 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 
 <div align="center">
 
-### 🌟 **Se você gostou, deixe uma estrela!** ⭐
+###  **Se você gostou, deixe uma estrela!** 
 
 <img src="https://img.shields.io/github/stars/seu-usuario/emotify?style=social" alt="GitHub stars">
 <img src="https://img.shields.io/github/forks/seu-usuario/emotify?style=social" alt="GitHub forks">
