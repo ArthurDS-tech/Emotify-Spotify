@@ -15,6 +15,9 @@ const playlistRoutes = require('./routes/playlists');
 
 const app = express();
 
+// Configurar trust proxy para funcionar com ngrok
+app.set('trust proxy', true);
+
 connectDB();
 
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
@@ -40,6 +43,30 @@ app.use('/api/playlists', playlistRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Endpoint de debug temporário
+app.get('/api/debug/config', (req, res) => {
+  const config = require('./config/spotify');
+  res.json({
+    clientId: config.clientId,
+    clientSecret: config.clientSecret ? '***' + config.clientSecret.slice(-4) : 'NOT SET',
+    redirectUri: config.redirectUri,
+    redirectUriLength: config.redirectUri?.length,
+    hasSpaces: {
+      start: config.redirectUri?.startsWith(' '),
+      end: config.redirectUri?.endsWith(' ')
+    }
+  });
+});
+
+// Rota raiz para evitar 404 em "/"
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Spotify Emotion Engine API',
+    status: 'ok',
+    healthCheck: '/api/health',
+  });
 });
 
 app.use((req, res) => {

@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 class TokenManager {
-  static generateAccessToken(userId, spotifyId) {
+  static generateAccessToken(userId, spotifyId, spotifyAccessToken) {
     return jwt.sign(
-      { userId, spotifyId },
+      { userId, spotifyId, spotifyAccessToken },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );

@@ -90,22 +90,37 @@ exports.callback = async (req, res) => {
       refreshToken = 'demo_refresh_token_123';
     } else {
       // Modo real
-      const tokenResponse = await axios.post(config.tokenUrl, {
+      logger.info('🔐 Iniciando troca de código por token...');
+      logger.info(`📍 Redirect URI: ${config.redirectUri}`);
+      logger.info(`🔑 Client ID: ${config.clientId}`);
+      
+      // Spotify requer application/x-www-form-urlencoded e Basic Auth
+      const params = new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: config.redirectUri,
-        client_id: config.clientId,
-        client_secret: config.clientSecret
+        redirect_uri: config.redirectUri
+      });
+
+      const authHeader = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+
+      const tokenResponse = await axios.post(config.tokenUrl, params.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${authHeader}`
+        }
       });
 
       spotifyToken = tokenResponse.data.access_token;
       refreshToken = tokenResponse.data.refresh_token;
+
+      logger.info('✅ Token obtido com sucesso!');
 
       const profileResponse = await axios.get('https://api.spotify.com/v1/me', {
         headers: { 'Authorization': `Bearer ${spotifyToken}` }
       });
 
       spotifyProfile = profileResponse.data;
+      logger.info(`👤 Perfil obtido: ${spotifyProfile.email}`);
     }
 
     // Simular salvamento no banco (sem MongoDB)
@@ -120,11 +135,29 @@ exports.callback = async (req, res) => {
       spotifyRefreshToken: refreshToken
     };
 
-    // Gerar tokens próprios
-    const accessToken = TokenManager.generateAccessToken(userData._id, userData.spotifyId);
+    // Gerar tokens próprios (incluindo o access token do Spotify no payload)
+    const accessToken = TokenManager.generateAccessToken(
+      userData._id,
+      userData.spotifyId,
+      spotifyToken
+    );
     const newRefreshToken = TokenManager.generateRefreshToken(userData._id);
 
     logger.info(`Usuario autenticado (${isDemoMode() ? 'DEMO' : 'REAL'}): ${userData.email}`);
+
+    const frontendUrl = process.env.FRONTEND_URL;
+
+    if (frontendUrl) {
+      const params = new URLSearchParams({
+        accessToken,
+        refreshToken: newRefreshToken,
+        name: userData.name || '',
+        email: userData.email || '',
+        profileImage: userData.profileImage || ''
+      });
+
+      return res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
+    }
 
     res.json({
       accessToken,
@@ -137,7 +170,19 @@ exports.callback = async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Auth callback error:', error.message);
+    logger.error('❌ Auth callback error:', error.message);
+    
+    if (error.response) {
+      logger.error('📋 Status:', error.response.status);
+      logger.error('📋 Data:', JSON.stringify(error.response.data));
+      logger.error('📋 Headers:', JSON.stringify(error.response.headers));
+      
+      return res.status(error.response.status).json({ 
+        error: 'Erro na autenticação com Spotify',
+        details: error.response.data 
+      });
+    }
+    
     res.status(500).json({ error: 'Erro na autenticação' });
   }
 };
