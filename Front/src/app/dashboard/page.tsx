@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Music, TrendingUp, Heart, Sparkles, Loader2 } from 'lucide-react'
-import { emotionAPI, userAPI } from '@/lib/api'
+import { Music, TrendingUp, Heart, Sparkles, Loader2, LogOut, Clock3, BarChart3 } from 'lucide-react'
+import { emotionAPI, userAPI, authAPI } from '@/lib/api'
+import Image from 'next/image'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [distribution, setDistribution] = useState<any>(null)
   const [insights, setInsights] = useState<any>(null)
+  const [report, setReport] = useState<any>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -22,21 +25,25 @@ export default function Dashboard() {
     }
 
     loadData()
-  }, [])
+  }, [router])
 
   const loadData = async () => {
     try {
-      const [profileRes, distributionRes, insightsRes] = await Promise.all([
+      setError('')
+      const [profileRes, distributionRes, insightsRes, reportRes] = await Promise.all([
         userAPI.getProfile(),
         emotionAPI.getEmotionDistribution(),
         emotionAPI.getInsights(),
+        emotionAPI.getEmotionReport(),
       ])
 
       setUser(profileRes.data.user)
       setDistribution(distributionRes.data)
       setInsights(insightsRes.data)
+      setReport(reportRes.data)
     } catch (error) {
       console.error('Error loading data:', error)
+      setError('Falha ao carregar dados. Atualize a página ou reconecte sua conta.')
     } finally {
       setLoading(false)
     }
@@ -44,13 +51,27 @@ export default function Dashboard() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true)
+    setError('')
     try {
-      await emotionAPI.analyzeTopTracks('medium_term', 50)
+      const response = await emotionAPI.analyzeCompleteProfile()
+      setReport(response.data.report)
       await loadData()
     } catch (error) {
       console.error('Error analyzing:', error)
+      setError('Não foi possível analisar suas músicas agora. Tente novamente em alguns segundos.')
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout()
+    } catch (error) {
+      console.error('Error logging out:', error)
+    } finally {
+      localStorage.removeItem('token')
+      router.push('/')
     }
   }
 
@@ -95,20 +116,35 @@ export default function Dashboard() {
             {user && (
               <div className="flex items-center gap-3">
                 {user.profile_image && (
-                  <img
+                  <Image
                     src={user.profile_image}
                     alt={user.display_name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full"
                   />
                 )}
                 <span className="text-gray-300">{user.display_name}</span>
               </div>
             )}
+            <button
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-12">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-500/40 bg-red-950/20 p-4 text-red-300">
+            {error}
+          </div>
+        )}
+
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -148,7 +184,7 @@ export default function Dashboard() {
             {analyzing ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Analisando suas top 50 músicas...
+                Analisando perfil completo...
               </span>
             ) : (
               (!distribution || distribution.totalTracks === 0)
@@ -158,7 +194,7 @@ export default function Dashboard() {
           </button>
           {analyzing && (
             <p className="text-sm mt-4 opacity-75">
-              Isso pode levar de 10 a 30 segundos. Aguarde...
+              Isso pode levar de 10 a 40 segundos. Aguarde...
             </p>
           )}
         </motion.div>
@@ -231,6 +267,33 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
+
+        {report && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-12 grid lg:grid-cols-2 gap-8"
+          >
+            <div className="bg-gray-900/50 backdrop-blur-sm p-8 rounded-3xl border border-gray-800">
+              <div className="flex items-center gap-3 mb-4">
+                <Clock3 className="w-6 h-6 text-cyan-400" />
+                <h3 className="text-2xl font-bold">Últimas Músicas</h3>
+              </div>
+              <ReportSummary summary={report.recent?.summary} />
+              <TrackEmotionList tracks={report.recent?.tracks || []} />
+            </div>
+
+            <div className="bg-gray-900/50 backdrop-blur-sm p-8 rounded-3xl border border-gray-800">
+              <div className="flex items-center gap-3 mb-4">
+                <BarChart3 className="w-6 h-6 text-spotify-green" />
+                <h3 className="text-2xl font-bold">Mais Ouvidas</h3>
+              </div>
+              <ReportSummary summary={report.top?.summary} />
+              <TrackEmotionList tracks={report.top?.tracks || []} />
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   )
@@ -277,6 +340,57 @@ function InsightCard({ insight }: any) {
       <div className="text-3xl mb-3">{insight.icon}</div>
       <h4 className="text-xl font-bold mb-2">{insight.title}</h4>
       <p className="text-gray-400">{insight.description}</p>
+    </div>
+  )
+}
+
+function ReportSummary({ summary }: any) {
+  if (!summary || !summary.totalTracks) {
+    return <p className="text-gray-400 mb-4">Sem dados para este bloco.</p>
+  }
+
+  return (
+    <div className="mb-5 text-sm text-gray-300">
+      <p className="mb-1">
+        <span className="text-gray-400">Dominante:</span>{' '}
+        <span className="capitalize font-semibold">{summary.dominantEmotion}</span>{' '}
+        ({summary.dominantPercentage?.toFixed?.(1) || summary.dominantPercentage}%)
+      </p>
+      <p>
+        <span className="text-gray-400">Confiança média:</span>{' '}
+        <span className="font-semibold">{((summary.averageConfidence || 0) * 100).toFixed(1)}%</span>
+      </p>
+    </div>
+  )
+}
+
+function TrackEmotionList({ tracks }: any) {
+  if (!tracks.length) {
+    return <p className="text-gray-500">Nenhuma música encontrada.</p>
+  }
+
+  return (
+    <div className="space-y-3 max-h-[520px] overflow-auto pr-2">
+      {tracks.slice(0, 20).map((track: any) => (
+        <div key={track.id} className="rounded-xl border border-gray-800 bg-gray-800/40 p-3">
+          <div className="flex items-center gap-3">
+            {track.albumImage && (
+              <Image src={track.albumImage} alt={track.name} width={48} height={48} className="w-12 h-12 rounded-md object-cover" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold truncate">{track.name}</p>
+              <p className="text-xs text-gray-400 truncate">{track.artists}</p>
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            <span className="bg-gray-700 px-2 py-1 rounded-full capitalize">{track.primaryEmotion}</span>
+            <span className="bg-gray-700 px-2 py-1 rounded-full capitalize">{track.secondaryEmotion}</span>
+            <span className="bg-gray-700 px-2 py-1 rounded-full">{track.emotionalBlend}</span>
+            <span className="bg-gray-700 px-2 py-1 rounded-full">Conf: {(Number(track.confidence || 0) * 100).toFixed(1)}%</span>
+            <span className="bg-gray-700 px-2 py-1 rounded-full">Fonte: {track.source === 'audio_features' ? 'Spotify' : 'Estimada'}</span>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

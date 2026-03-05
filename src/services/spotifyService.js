@@ -98,6 +98,32 @@ class SpotifyService {
   }
 
   /**
+   * Get multiple artists by ID
+   */
+  async getArtists(accessToken, artistIds = []) {
+    try {
+      if (!artistIds.length) return [];
+
+      const chunks = this.chunkArray(artistIds, 50);
+      const allArtists = [];
+
+      for (const chunk of chunks) {
+        const response = await axios.get(`${this.baseURL}/artists`, {
+          headers: this.getAuthHeader(accessToken),
+          params: { ids: chunk.join(',') }
+        });
+
+        allArtists.push(...response.data.artists.filter(Boolean));
+      }
+
+      return allArtists;
+    } catch (error) {
+      logger.error('Error fetching artists:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Get recently played tracks
    */
   async getRecentlyPlayed(accessToken, limit = 50) {

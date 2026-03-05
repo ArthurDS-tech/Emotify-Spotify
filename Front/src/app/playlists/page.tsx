@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Music, ArrowLeft, Plus, Loader2 } from 'lucide-react'
 import { playlistAPI } from '@/lib/api'
+import Image from 'next/image'
 
 export default function PlaylistsPage() {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState<any[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedEmotion, setSelectedEmotion] = useState('')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const emotions = [
     { id: 'joy', name: 'Alegria', emoji: '😊', color: 'bg-yellow-500' },
@@ -32,15 +35,17 @@ export default function PlaylistsPage() {
     }
 
     loadPlaylists()
-  }, [])
+  }, [router])
 
   const loadPlaylists = async () => {
     setLoading(true)
+    setError('')
     try {
       const response = await playlistAPI.getUserPlaylists()
       setPlaylists(response.data.playlists)
     } catch (error) {
       console.error('Error loading playlists:', error)
+      setError('Não foi possível carregar suas playlists.')
     } finally {
       setLoading(false)
     }
@@ -50,6 +55,8 @@ export default function PlaylistsPage() {
     if (!selectedEmotion) return
 
     setCreating(true)
+    setError('')
+    setSuccess('')
     try {
       const emotion = emotions.find(e => e.id === selectedEmotion)
       await playlistAPI.createEmotionPlaylist({
@@ -62,10 +69,10 @@ export default function PlaylistsPage() {
       setShowCreateModal(false)
       setSelectedEmotion('')
       await loadPlaylists()
-      alert('Playlist criada com sucesso!')
+      setSuccess('Playlist criada com sucesso no Spotify.')
     } catch (error: any) {
       console.error('Error creating playlist:', error)
-      alert(error.response?.data?.error || 'Erro ao criar playlist. Analise suas músicas primeiro!')
+      setError(error.response?.data?.error || 'Erro ao criar playlist. Analise suas músicas primeiro!')
     } finally {
       setCreating(false)
     }
@@ -86,6 +93,17 @@ export default function PlaylistsPage() {
       </header>
 
       <div className="container mx-auto px-4 py-12">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-500/40 bg-red-950/20 p-4 text-red-300">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 rounded-xl border border-green-500/40 bg-green-950/20 p-4 text-green-300">
+            {success}
+          </div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -132,9 +150,11 @@ export default function PlaylistsPage() {
                 onClick={() => window.open(`https://open.spotify.com/playlist/${playlist.id}`, '_blank')}
               >
                 {playlist.images?.[0] && (
-                  <img
+                  <Image
                     src={playlist.images[0].url}
                     alt={playlist.name}
+                    width={512}
+                    height={192}
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />
                 )}

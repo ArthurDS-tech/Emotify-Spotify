@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export const API_BASE_URL = API_URL;
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -40,6 +41,8 @@ export const authAPI = {
 export const emotionAPI = {
   analyzeTopTracks: (timeRange = 'medium_term', limit = 50) =>
     api.get(`/emotion/analyze/top-tracks?timeRange=${timeRange}&limit=${limit}`),
+  analyzeCompleteProfile: () =>
+    api.post('/emotion/analyze/profile'),
   analyzeTrack: (trackId: string) =>
     api.get(`/emotion/analyze/track/${trackId}`),
   getUserAnalyses: (limit = 50) =>
@@ -48,6 +51,8 @@ export const emotionAPI = {
     api.get('/emotion/distribution'),
   getInsights: () =>
     api.get('/emotion/insights'),
+  getEmotionReport: () =>
+    api.get('/emotion/report'),
 };
 
 export const tracksAPI = {

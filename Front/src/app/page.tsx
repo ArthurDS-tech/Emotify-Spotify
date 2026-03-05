@@ -1,24 +1,45 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Music, Heart, TrendingUp, Users, Sparkles } from 'lucide-react'
+import { Music, Heart, TrendingUp, Users, Sparkles, ShieldCheck, Radio } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { authAPI, API_BASE_URL } from '@/lib/api'
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [error, setError] = useState('')
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking')
 
   useEffect(() => {
     setMounted(true)
+
+    fetch(`${API_BASE_URL}/api/health`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Backend unavailable')
+        setBackendStatus('online')
+      })
+      .catch(() => {
+        setBackendStatus('offline')
+      })
   }, [])
 
   const handleLogin = async () => {
+    setConnecting(true)
+    setError('')
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login')
-      const data = await response.json()
-      window.location.href = data.authUrl
+      const response = await authAPI.getAuthUrl()
+      const authUrl = response.data?.authUrl
+
+      if (!authUrl) {
+        throw new Error('Resposta de autenticação inválida')
+      }
+
+      window.location.href = authUrl
     } catch (error) {
       console.error('Error getting auth URL:', error)
-      alert('Erro ao conectar com Spotify. Verifique se o backend está rodando.')
+      setError('Não foi possível iniciar login com Spotify. Verifique backend e variáveis de ambiente.')
+      setConnecting(false)
     }
   }
 
@@ -58,10 +79,28 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogin}
+            disabled={connecting || backendStatus === 'offline'}
             className="bg-spotify-green hover:bg-green-600 text-white font-bold py-4 px-12 rounded-full text-xl transition-all shadow-lg hover:shadow-spotify-green/50"
           >
-            Conectar com Spotify
+            {connecting ? 'Conectando...' : 'Conectar com Spotify'}
           </motion.button>
+
+          <div className="mt-6 flex items-center justify-center gap-3 text-sm">
+            <span className="text-gray-400">API:</span>
+            <span className={`font-semibold ${
+              backendStatus === 'online'
+                ? 'text-green-400'
+                : backendStatus === 'offline'
+                  ? 'text-red-400'
+                  : 'text-yellow-400'
+            }`}>
+              {backendStatus === 'checking' ? 'Verificando...' : backendStatus === 'online' ? 'Online' : 'Offline'}
+            </span>
+          </div>
+
+          {error && (
+            <p className="mt-4 text-red-400 text-sm">{error}</p>
+          )}
         </motion.div>
 
         {/* Features */}
@@ -71,6 +110,12 @@ export default function Home() {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-32"
         >
+          <FeatureCard
+            icon={<ShieldCheck className="w-12 h-12" />}
+            title="OAuth Seguro"
+            description="Conexão autenticada com Spotify sem compartilhar sua senha"
+            color="text-emerald-400"
+          />
           <FeatureCard
             icon={<Heart className="w-12 h-12" />}
             title="Análise Emocional"
@@ -90,10 +135,10 @@ export default function Home() {
             color="text-purple-400"
           />
           <FeatureCard
-            icon={<Users className="w-12 h-12" />}
-            title="Conexões Sociais"
-            description="Encontre pessoas com gosto musical similar"
-            color="text-green-400"
+            icon={<Radio className="w-12 h-12" />}
+            title="Dados em Tempo Real"
+            description="Atualize sua análise com seu comportamento musical atual"
+            color="text-cyan-400"
           />
         </motion.div>
 
