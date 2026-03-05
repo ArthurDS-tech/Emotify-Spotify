@@ -1,240 +1,249 @@
-<div align="center">
+# 🎵 Emotify - Análise Emocional de Música Spotify
 
-# 🎵 **Emotify** 
-### *Descubra as emoções por trás da sua música*
+Transforme seus dados do Spotify em insights emocionais profundos usando IA avançada.
 
-<img src="https://img.shields.io/badge/Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white" alt="Spotify">
-<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js">
-<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
-<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+## 🚀 Início Rápido
 
----
+### Pré-requisitos
+- Node.js 18+ instalado
+- Conta Spotify (gratuita ou premium)
+- Conta Supabase (gratuita)
+- Conta Spotify Developer
 
-*Transforme seus dados do Spotify em insights emocionais profundos*
+### Configuração em 3 Passos
 
-</div>
+#### 1️⃣ Configure o Spotify Developer Dashboard
 
-## 🌟 **O que é o Emotify?**
+1. Acesse: https://developer.spotify.com/dashboard
+2. Crie um app ou abra o existente
+3. Vá em **Settings**
+4. Em **Redirect URIs**, adicione:
+   ```
+   http://localhost:3001/api/auth/callback
+   ```
+5. Clique em **Save**
+6. **IMPORTANTE**: Aguarde 2 minutos para as mudanças propagarem
 
-> **Emotify** é uma aplicação revolucionária que analisa seus hábitos musicais do Spotify e revela o **DNA emocional** das suas músicas favoritas. Descubra padrões ocultos, entenda seus estados de espírito através da música e conecte-se com pessoas que compartilham sua vibe musical.
+#### 2️⃣ Configure o Supabase
 
-<div align="center">
+1. Acesse: https://supabase.com/dashboard
+2. Crie um projeto ou abra o existente
+3. Vá em **SQL Editor**
+4. Clique em **New Query**
+5. Cole TODO o conteúdo do arquivo `supabase-schema.sql`
+6. Clique em **Run**
+7. Aguarde a mensagem de sucesso
 
----
+#### 3️⃣ Configure as Variáveis de Ambiente
 
-## ✨ **Funcionalidades Principais**
+Copie `.env.example` para `.env` e preencha:
 
-<div align="center">
+```env
+# Supabase (pegue em: Settings > API)
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_chave_anon
+SUPABASE_SERVICE_KEY=sua_chave_service
 
-| 🎯 **Análise Emocional** | 🎵 **Dados Reais** | 👥 **Social** | 📊 **Insights** |
-|:---:|:---:|:---:|:---:|
-| Algoritmo de IA que analisa valência, energia e dançabilidade | Integração completa com Spotify Web API | Conecte-se com pessoas de gosto musical similar | Visualizações interativas dos seus padrões |
-| 7 emoções diferentes identificadas | Top músicas, histórico real, audio features | Crie e compartilhe playlists colaborativas | Timeline emocional semanal |
+# Spotify (pegue em: Dashboard > Settings)
+SPOTIFY_CLIENT_ID=seu_client_id
+SPOTIFY_CLIENT_SECRET=seu_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:3001/api/auth/callback
 
-</div>
+# JWT (gere uma chave aleatória)
+JWT_SECRET=sua_chave_secreta_aleatoria
 
-### 🚀 **Principais Features**
-
-```typescript
-🎵 Análise Emocional Avançada
-├── 🧠 Engine de IA para processamento emocional
-├── 📈 7 categorias emocionais (Alegria, Melancolia, Nostalgia, etc.)
-├── ⚡ Análise de energia, valência e dançabilidade
-└── 📊 Insights personalizados baseados em seus dados
-
-🎶 Integração Real com Spotify
-├── 🔐 OAuth 2.0 seguro
-├── 🎵 Top músicas por período (curto/médio/longo prazo)
-├── ⏰ Histórico de reprodução em tempo real
-└── 🎨 Criação de playlists diretamente no Spotify
-
-👥 Recursos Sociais
-├── 🤝 Matching por compatibilidade musical
-├── 🎵 Playlists colaborativas
-├── 📱 Feed de atividades dos amigos
-└── 🌍 Descoberta de novos usuários
-
-📱 Interface Moderna
-├── 🎨 Design inspirado no Spotify
-├── 📱 Totalmente responsivo
-├── ⚡ Animações fluidas com Framer Motion
-└── 🌙 Suporte a tema escuro/claro
+# Servidor
+PORT=3001
+FRONTEND_URL=http://localhost:3000
 ```
 
----
+Configure também `Front/.env.local`:
 
-## 🛠️ **Stack Tecnológica**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
 
-<div align="center">
+### 🎯 Iniciar Aplicação
 
-### **Frontend** 
-<img src="https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js">
-<img src="https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
-<img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind">
-<img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white" alt="Framer Motion">
-
-### **Backend**
-<img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
-<img src="https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
-<img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB">
-<img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis">
-<img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white" alt="JWT">
-
-### **APIs & Integrações**
-<img src="https://img.shields.io/badge/Spotify_Web_API-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Spotify API">
-<img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase">
-
-</div>
-
----
-
-## 🚀 **Instalação e Configuração**
-
-### **Guia Rápido (5 minutos)** ⚡
-
+**Opção 1: Script Automático (Recomendado)**
 ```bash
-# 1. Clone e instale
-git clone <seu-repositorio>
-cd emotify
+START-CLEAN.bat
+```
+
+**Opção 2: Manual**
+
+Terminal 1 (Backend):
+```bash
 npm install
+npm run dev
+```
 
-# 2. Configure backend
-cp .env.example .env
-# Edite .env com suas credenciais
-
-# 3. Configure frontend
+Terminal 2 (Frontend):
+```bash
 cd Front
 npm install
-cp .env.example .env.local
-# Edite .env.local
-
-# 4. Execute
-# Terminal 1: npm run dev
-# Terminal 2: cd Front && npm run dev
+npm run dev
 ```
 
-### **Documentação Completa** 📚
+### ✅ Verificação
 
-- 📖 **[Guia Rápido](QUICKSTART.md)** - Comece em 5 minutos
-- 🚀 **[Guia Completo de Instalação](SETUP.md)** - Passo a passo detalhado
-- 📡 **[Documentação da API](API.md)** - Referência completa da API
-- 🛠️ **[Comandos Úteis](COMMANDS.md)** - Comandos para desenvolvimento
-- 📁 **[Estrutura do Projeto](STRUCTURE.md)** - Organização de pastas
-- 🚀 **[Guia de Deploy](DEPLOYMENT.md)** - Como colocar em produção
-- 🤝 **[Como Contribuir](CONTRIBUTING.md)** - Guia de contribuição
-- 📊 **[Resumo Executivo](PROJECT_SUMMARY.md)** - Visão geral técnica
+Acesse: http://localhost:3000
 
-### **Pré-requisitos**
-- Node.js 18+
-- Conta no [Spotify for Developers](https://developer.spotify.com/dashboard)
-- Conta no [Supabase](https://supabase.com)
-
-<div align="center">
-
-🎉 **Acesse:** `http://localhost:3000`
-
-</div>
+Você deve ver a página inicial do Emotify com o botão "Conectar com Spotify".
 
 ---
 
-## 📸 **Screenshots**
+## 📖 Documentação
 
-<div align="center">
-
-### 🏠 **Dashboard Principal**
-<img src="https://via.placeholder.com/800x400/1DB954/FFFFFF?text=🏠+Dashboard+Principal" alt="Dashboard" width="800">
-
-### 📊 **Análise Emocional**
-<img src="https://via.placeholder.com/800x400/191414/1DB954?text=📊+Análise+Emocional" alt="Análise" width="800">
-
-### 👥 **Área Social**
-<img src="https://via.placeholder.com/800x400/1ED760/FFFFFF?text=👥+Área+Social" alt="Social" width="800">
-
-</div>
+- **[INICIAR-RAPIDO.md](INICIAR-RAPIDO.md)** - Guia de início rápido
+- **[SETUP.md](SETUP.md)** - Configuração detalhada
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Solução de problemas
+- **[API.md](API.md)** - Documentação da API
+- **[COMMANDS.md](COMMANDS.md)** - Comandos úteis
 
 ---
 
-## 🎯 **Como Funciona a Análise Emocional**
+## 🎨 Funcionalidades
 
-<div align="center">
+### ✨ Análise Emocional
+- Identifica 7 emoções diferentes: Alegria, Melancolia, Energia, Calma, Nostalgia, Euforia, Introspecção
+- Análise baseada em características de áudio do Spotify
+- Engine de IA proprietária
 
-```mermaid
-graph TD
-    A[🎵 Suas Músicas] --> B[📊 Audio Features]
-    B --> C[🧠 Engine Emocional]
-    C --> D[📈 Scores Emocionais]
-    D --> E[🎨 Visualização]
-    
-    B --> F[Valência<br/>Energia<br/>Dançabilidade<br/>Acústica]
-    F --> G[Algoritmo de IA]
-    G --> H[7 Emoções<br/>Identificadas]
+### 📊 Dashboard Interativo
+- Visualização de distribuição emocional
+- Insights personalizados
+- Estatísticas detalhadas
+
+### 🎵 Análise de Músicas
+- Top tracks com análise emocional
+- Histórico de reprodução
+- Características de áudio detalhadas
+
+### 🎧 Playlists Inteligentes
+- Crie playlists baseadas em emoções
+- Recomendações personalizadas
+- Integração direta com Spotify
+
+---
+
+## 🛠️ Tecnologias
+
+### Backend
+- Node.js + Express
+- Supabase (PostgreSQL)
+- Spotify Web API
+- JWT Authentication
+
+### Frontend
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Recharts
+
+---
+
+## 🔧 Problemas Comuns
+
+### Frontend mostra 404
+```bash
+RESTART-FRONTEND.bat
 ```
 
-</div>
+### "Authentication failed"
+1. Verifique o Redirect URI no Spotify Dashboard
+2. Aguarde 2 minutos após salvar
+3. Limpe o cache do navegador
+4. Tente novamente
 
-### **Emoções Detectadas:**
-- 😊 **Alegria** - Músicas positivas e energéticas
-- 😢 **Melancolia** - Faixas introspectivas e melancólicas  
-- 💭 **Nostalgia** - Sons que evocam memórias
-- 😌 **Calma** - Músicas relaxantes e tranquilas
-- 🎉 **Euforia** - Tracks para dançar e celebrar
-- 🤔 **Introspecção** - Músicas para reflexão
-- ⚡ **Energia** - Faixas que te fazem mover
+### Erro de conexão com Supabase
+```bash
+node test-supabase-connection.js
+```
 
----
-
-## 🤝 **Contribuindo**
-
-<div align="center">
-
-Adoramos contribuições! 🎵
-
-</div>
-
-### **Como contribuir:**
-
-1. **Fork** o projeto
-2. Crie uma **branch** para sua feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um **Pull Request**
-
-### **Áreas que precisam de ajuda:**
-- 🎨 Melhorias no design/UX
-- 🧠 Algoritmos de análise emocional
-- 🌐 Internacionalização
-- 📱 App mobile (React Native)
-- 🔧 Otimizações de performance
+Consulte [TROUBLESHOOTING.md](TROUBLESHOOTING.md) para mais detalhes.
 
 ---
 
-## 📄 **Licença**
+## 📝 Scripts Úteis
 
-<div align="center">
+```bash
+# Testar conexão Supabase
+node test-supabase-connection.js
 
-Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+# Testar configuração Spotify
+node test-spotify-config.js
+
+# Reiniciar frontend
+RESTART-FRONTEND.bat
+
+# Inicialização limpa
+START-CLEAN.bat
+```
 
 ---
 
-### 🎵 **Feito com ❤️ e muita música**
+## 🎯 Primeiro Uso
 
-<img src="https://img.shields.io/badge/Made_with-❤️-1DB954?style=for-the-badge" alt="Made with Love">
-<img src="https://img.shields.io/badge/Powered_by-Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white" alt="Powered by Spotify">
-
-**Desenvolvido por:** [Seu Nome](https://github.com/seu-usuario)
-
-</div>
+1. Acesse http://localhost:3000
+2. Clique em "Conectar com Spotify"
+3. Faça login e autorize o app
+4. No dashboard, clique em "Analisar Minhas Músicas"
+5. Aguarde 10-30 segundos
+6. Explore seus insights emocionais!
 
 ---
 
-<div align="center">
+## 📊 Estrutura do Projeto
 
-### 🌟 **Se você gostou, deixe uma estrela!** ⭐
+```
+Emotify-Spotify/
+├── src/                    # Backend
+│   ├── controllers/        # Controladores da API
+│   ├── services/          # Lógica de negócio
+│   ├── models/            # Modelos de dados
+│   ├── middleware/        # Middlewares
+│   ├── routes/            # Rotas da API
+│   ├── config/            # Configurações
+│   └── utils/             # Utilitários
+├── Front/                 # Frontend Next.js
+│   └── src/
+│       ├── app/           # App Router
+│       └── lib/           # Bibliotecas
+├── .env                   # Variáveis backend
+├── Front/.env.local       # Variáveis frontend
+└── supabase-schema.sql    # Schema do banco
+```
 
-<img src="https://img.shields.io/github/stars/seu-usuario/emotify?style=social" alt="GitHub stars">
-<img src="https://img.shields.io/github/forks/seu-usuario/emotify?style=social" alt="GitHub forks">
-<img src="https://img.shields.io/github/watchers/seu-usuario/emotify?style=social" alt="GitHub watchers">
+---
 
-</div>
+## 🤝 Contribuindo
+
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para diretrizes de contribuição.
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 🎵 Feito com ❤️ e muita música
+
+Powered by Spotify Web API
+
+---
+
+## 📞 Suporte
+
+Problemas? Consulte:
+1. [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+2. [SETUP.md](SETUP.md)
+3. [API.md](API.md)
+
+---
+
+**Aproveite sua jornada emocional musical! 🎵✨**

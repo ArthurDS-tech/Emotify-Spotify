@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
-export default function AuthSuccess() {
+function AuthSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -13,7 +13,9 @@ export default function AuthSuccess() {
     
     if (token) {
       localStorage.setItem('token', token)
-      router.push('/dashboard')
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 500)
     } else {
       router.push('/')
     }
@@ -24,7 +26,20 @@ export default function AuthSuccess() {
       <div className="text-center">
         <Loader2 className="w-16 h-16 text-spotify-green animate-spin mx-auto mb-4" />
         <p className="text-xl text-gray-300">Autenticando...</p>
+        <p className="text-sm text-gray-500 mt-2">Redirecionando para o dashboard...</p>
       </div>
     </div>
+  )
+}
+
+export default function AuthSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-spotify-black flex items-center justify-center">
+        <Loader2 className="w-16 h-16 text-spotify-green animate-spin" />
+      </div>
+    }>
+      <AuthSuccessContent />
+    </Suspense>
   )
 }

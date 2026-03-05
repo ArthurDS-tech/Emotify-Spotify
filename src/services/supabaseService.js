@@ -7,28 +7,55 @@ class SupabaseService {
    */
   async createOrUpdateUser(userData) {
     try {
+      logger.info('📝 Creating/updating user in Supabase...');
+      logger.info(`   Spotify ID: ${userData.spotifyId}`);
+      logger.info(`   Email: ${userData.email}`);
+      
+      const userPayload = {
+        spotify_id: userData.spotifyId,
+        email: userData.email,
+        display_name: userData.displayName,
+        profile_image: userData.profileImage,
+        country: userData.country,
+        spotify_access_token: userData.accessToken,
+        spotify_refresh_token: userData.refreshToken,
+        token_expires_at: userData.tokenExpiresAt,
+        last_login: new Date().toISOString()
+      };
+      
+      logger.info('   Payload prepared, executing upsert...');
+      
       const { data, error } = await supabaseAdmin
         .from('users')
-        .upsert({
-          spotify_id: userData.spotifyId,
-          email: userData.email,
-          display_name: userData.displayName,
-          profile_image: userData.profileImage,
-          country: userData.country,
-          spotify_access_token: userData.accessToken,
-          spotify_refresh_token: userData.refreshToken,
-          token_expires_at: userData.tokenExpiresAt,
-          last_login: new Date().toISOString()
-        }, {
+        .upsert(userPayload, {
           onConflict: 'spotify_id'
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('❌ Supabase upsert error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+      
+      logger.info('✅ User upserted successfully');
+      logger.info(`   User ID: ${data.id}`);
+      
       return data;
     } catch (error) {
-      logger.error('Error creating/updating user:', error);
+      logger.error('❌ Error in createOrUpdateUser:', error);
+      logger.error('   Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
   }

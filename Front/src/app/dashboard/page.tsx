@@ -71,6 +71,26 @@ export default function Dashboard() {
             <Music className="w-8 h-8 text-spotify-green" />
             <h1 className="text-2xl font-bold">Emotify</h1>
           </div>
+          <nav className="flex items-center gap-6">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => router.push('/tracks')}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Minhas Músicas
+            </button>
+            <button
+              onClick={() => router.push('/playlists')}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Playlists
+            </button>
+          </nav>
           <div className="flex items-center gap-4">
             {user && (
               <div className="flex items-center gap-3">
@@ -103,36 +123,45 @@ export default function Dashboard() {
           </p>
         </motion.div>
 
-        {/* Analyze Button */}
-        {(!distribution || distribution.totalTracks === 0) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-r from-spotify-green to-green-600 p-8 rounded-3xl mb-12 text-center"
+        {/* Analyze Button - Always show */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-r from-spotify-green to-green-600 p-8 rounded-3xl mb-12 text-center"
+        >
+          <Sparkles className="w-16 h-16 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold mb-4">
+            {(!distribution || distribution.totalTracks === 0) 
+              ? 'Pronto para começar?' 
+              : 'Atualizar Análise'}
+          </h3>
+          <p className="text-lg mb-6 opacity-90">
+            {(!distribution || distribution.totalTracks === 0)
+              ? 'Analise suas músicas favoritas e descubra seu perfil emocional'
+              : 'Analise novamente para atualizar seus dados com suas músicas mais recentes'}
+          </p>
+          <button
+            onClick={handleAnalyze}
+            disabled={analyzing}
+            className="bg-white text-spotify-black font-bold py-4 px-12 rounded-full text-lg hover:bg-gray-100 transition-all disabled:opacity-50"
           >
-            <Sparkles className="w-16 h-16 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-4">
-              Pronto para começar?
-            </h3>
-            <p className="text-lg mb-6 opacity-90">
-              Analise suas músicas favoritas e descubra seu perfil emocional
+            {analyzing ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Analisando suas top 50 músicas...
+              </span>
+            ) : (
+              (!distribution || distribution.totalTracks === 0)
+                ? 'Analisar Minhas Músicas'
+                : 'Atualizar Análise'
+            )}
+          </button>
+          {analyzing && (
+            <p className="text-sm mt-4 opacity-75">
+              Isso pode levar de 10 a 30 segundos. Aguarde...
             </p>
-            <button
-              onClick={handleAnalyze}
-              disabled={analyzing}
-              className="bg-white text-spotify-black font-bold py-4 px-12 rounded-full text-lg hover:bg-gray-100 transition-all disabled:opacity-50"
-            >
-              {analyzing ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Analisando...
-                </span>
-              ) : (
-                'Analisar Minhas Músicas'
-              )}
-            </button>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
 
         {/* Stats Grid */}
         {distribution && distribution.totalTracks > 0 && (
