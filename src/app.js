@@ -2,77 +2,47 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
-const logger = require('./utils/logger');
-const { connectDB } = require('./config/database');
-
-const authRoutes = require('./routes/auth');
-const emotionRoutes = require('./routes/emotion');
-const tracksRoutes = require('./routes/tracks');
-const userRoutes = require('./routes/user');
-const playlistRoutes = require('./routes/playlists');
+const rateLimiter = require('./middleware/rateLimiter');
 
 const app = express();
 
-// Configurar trust proxy para funcionar com ngrok
-app.set('trust proxy', true);
+// Security middleware
+app.use(helmet());
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://dian-deanthropomorphic-unlicentiously.ngrok-free.dev'
+  ],
+  credentials: true
+}));
 
-connectDB();
+// Compression
+app.use(compression());
 
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
-app.use(cors({ origin: '*', credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'Authorization'] }));
-app.use(morgan('combined', { stream: { write: msg => logger.info(msg) } }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Body parsing
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use('/api/', limiter);
+// Logging
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
 
-app.use('/api/auth', authRoutes);
-app.use('/api/emotion', emotionRoutes);
-app.use('/api/tracks', tracksRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/playlists', playlistRoutes);
+// Rate limiting
+app.use(rateLimiter);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Routes
+app.use('/api', routes);
 
-// Endpoint de debug temporário
-app.get('/api/debug/config', (req, res) => {
-  const config = require('./config/spotify');
-  res.json({
-    clientId: config.clientId,
-    clientSecret: config.clientSecret ? '***' + config.clientSecret.slice(-4) : 'NOT SET',
-    redirectUri: config.redirectUri,
-    redirectUriLength: config.redirectUri?.length,
-    hasSpaces: {
-      start: config.redirectUri?.startsWith(' '),
-      end: config.redirectUri?.endsWith(' ')
-    }
-  });
-});
-
-// Rota raiz para evitar 404 em "/"
-app.get('/', (req, res) => {
-  res.json({
-    name: 'Spotify Emotion Engine API',
-    status: 'ok',
-    healthCheck: '/api/health',
-  });
-});
-
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
-});
-
+// Error handling
 app.use(errorHandler);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 module.exports = app;

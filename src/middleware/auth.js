@@ -1,23 +1,20 @@
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
-      return res.status(401).json({ error: 'Token não fornecido' });
+      return res.status(401).json({ error: 'No authentication token provided' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = {
-      userId: decoded.userId,
-      spotifyId: decoded.spotifyId,
-      spotifyAccessToken: decoded.spotifyAccessToken
-    };
+    req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Token inválido' });
+    logger.error('Authentication error:', error.message);
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 

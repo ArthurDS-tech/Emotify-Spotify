@@ -1,212 +1,169 @@
 const axios = require('axios');
-const User = require('../models/User');
-const TokenManager = require('../utils/tokenManager');
-const config = require('../config/spotify');
+const jwt = require('jsonwebtoken');
+const supabaseService = require('../services/supabaseService');
+const spotifyService = require('../services/spotifyService');
 const logger = require('../utils/logger');
 
-// Dados de demo para teste
-const DEMO_USER = {
-  id: 'demo_user_123',
-  email: 'demo@example.com',
-  display_name: 'Usuário Demo',
-  images: [{ url: 'https://via.placeholder.com/150' }],
-  country: 'BR'
-};
+class AuthController {
+  /**
+   * Generate Spotify authorization URL
+   */
+  getAuthUrl(req, res) {
+    const scopes = [
+      'user-read-private',
+      'user-read-email',
+      'user-top-read',
+      'user-read-recently-played',
+      'user-library-read',
+      'playlist-read-private',
+      'playlist-modify-public',
+      'playlist-modify-private',
+      'user-read-playback-state',
+      'user-read-currently-playing'
+    ].join(' ');
 
-const DEMO_TRACKS = [
-  {
-    id: 'track1',
-    name: 'Blinding Lights',
-    artists: [{ name: 'The Weeknd' }],
-    album: { name: 'After Hours' }
-  },
-  {
-    id: 'track2', 
-    name: 'Watermelon Sugar',
-    artists: [{ name: 'Harry Styles' }],
-    album: { name: 'Fine Line' }
-  }
-];
+    const authUrl = `https://accounts.spotify.com/authorize?` +
+      `client_id=${process.env.SPOTIFY_CLIENT_ID}&` +
+      `response_type=code&` +
+      `redirect_uri=${encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI)}&` +
+      `scope=${encodeURIComponent(scopes)}`;
 
-const DEMO_AUDIO_FEATURES = [
-  {
-    id: 'track1',
-    danceability: 0.514,
-    energy: 0.73,
-    valence: 0.675,
-    acousticness: 0.001,
-    instrumentalness: 0.000,
-    tempo: 171.005
-  },
-  {
-    id: 'track2',
-    danceability: 0.548,
-    energy: 0.816,
-    valence: 0.557,
-    acousticness: 0.122,
-    instrumentalness: 0.000,
-    tempo: 95.079
-  }
-];
-
-const isDemoMode = () => {
-  return config.clientId === 'demo_client_id' || !config.clientId || config.clientId === 'your_spotify_client_id';
-};
-
-exports.getAuthUrl = (req, res) => {
-  if (isDemoMode()) {
-    // Modo demo - retorna URL fake
-    const demoUrl = `http://localhost:3000/demo-auth?code=demo_code_123&state=demo_state`;
-    return res.json({ authUrl: demoUrl });
+    res.json({ authUrl });
   }
 
-  const params = new URLSearchParams({
-    client_id: config.clientId,
-    response_type: 'code',
-    redirect_uri: config.redirectUri,
-    scope: config.scopes,
-    state: Math.random().toString(36).substring(7)
-  });
-
-  const authUrl = `${config.authUrl}?${params}`;
-  res.json({ authUrl });
-};
-
-exports.callback = async (req, res) => {
-  try {
+  /**
+   * Handle Spotify OAuth callback
+   */
+  async callback(req, res) {
     const { code } = req.query;
-    
+
     if (!code) {
-      return res.status(400).json({ error: 'Código de autorização não fornecido' });
+      return res.redirect(`${process.env.FRONTEND_URL}/auth/error?message=No authorization code`);
     }
 
-    let spotifyProfile, spotifyToken, refreshToken;
-
-    if (isDemoMode() || code === 'demo_code_123') {
-      // Modo demo
-      logger.info('Usando modo DEMO - dados simulados');
-      spotifyProfile = DEMO_USER;
-      spotifyToken = 'demo_access_token_123';
-      refreshToken = 'demo_refresh_token_123';
-    } else {
-      // Modo real
-      logger.info('🔐 Iniciando troca de código por token...');
-      logger.info(`📍 Redirect URI: ${config.redirectUri}`);
-      logger.info(`🔑 Client ID: ${config.clientId}`);
-      
-      // Spotify requer application/x-www-form-urlencoded e Basic Auth
-      const params = new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: config.redirectUri
-      });
-
-      const authHeader = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
-
-      const tokenResponse = await axios.post(config.tokenUrl, params.toString(), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${authHeader}`
+    try {
+      // Exchange code for tokens
+      const tokenResponse = await axios.post(
+        'https://accounts.spotify.com/api/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: process.env.SPOTIFY_REDIRECT_URI
+        }),
+        {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(
+              `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+            ).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
         }
+      );
+
+      const { access_token, refresh_token, expires_in } = tokenResponse.data;
+
+      // Get user profile from Spotify
+      const spotifyProfile = await spotifyService.getUserProfile(access_token);
+
+      // Calculate token expiration
+      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+
+      // Create or update user in Supabase
+      const user = await supabaseService.createOrUpdateUser({
+        spotifyId: spotifyProfile.id,
+        email: spotifyProfile.email,
+        displayName: spotifyProfile.display_name,
+        profileImage: spotifyProfile.images?.[0]?.url || null,
+        country: spotifyProfile.country,
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        tokenExpiresAt: tokenExpiresAt.toISOString()
       });
 
-      spotifyToken = tokenResponse.data.access_token;
-      refreshToken = tokenResponse.data.refresh_token;
+      // Generate JWT for our application
+      const appToken = jwt.sign(
+        {
+          userId: user.id,
+          spotifyId: user.spotify_id,
+          email: user.email
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
 
-      logger.info('✅ Token obtido com sucesso!');
-
-      const profileResponse = await axios.get('https://api.spotify.com/v1/me', {
-        headers: { 'Authorization': `Bearer ${spotifyToken}` }
-      });
-
-      spotifyProfile = profileResponse.data;
-      logger.info(`👤 Perfil obtido: ${spotifyProfile.email}`);
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${appToken}`);
+    } catch (error) {
+      logger.error('OAuth callback error:', error.response?.data || error.message);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/error?message=Authentication failed`);
     }
+  }
 
-    // Simular salvamento no banco (sem MongoDB)
-    const userData = {
-      _id: 'demo_user_id_123',
-      spotifyId: spotifyProfile.id,
-      email: spotifyProfile.email,
-      name: spotifyProfile.display_name,
-      profileImage: spotifyProfile.images?.[0]?.url,
-      country: spotifyProfile.country,
-      spotifyAccessToken: spotifyToken,
-      spotifyRefreshToken: refreshToken
-    };
-
-    // Gerar tokens próprios (incluindo o access token do Spotify no payload)
-    const accessToken = TokenManager.generateAccessToken(
-      userData._id,
-      userData.spotifyId,
-      spotifyToken
-    );
-    const newRefreshToken = TokenManager.generateRefreshToken(userData._id);
-
-    logger.info(`Usuario autenticado (${isDemoMode() ? 'DEMO' : 'REAL'}): ${userData.email}`);
-
-    const frontendUrl = process.env.FRONTEND_URL;
-
-    if (frontendUrl) {
-      const params = new URLSearchParams({
-        accessToken,
-        refreshToken: newRefreshToken,
-        name: userData.name || '',
-        email: userData.email || '',
-        profileImage: userData.profileImage || ''
-      });
-
-      return res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
-    }
-
-    res.json({
-      accessToken,
-      refreshToken: newRefreshToken,
-      user: {
-        id: userData._id,
-        email: userData.email,
-        name: userData.name,
-        profileImage: userData.profileImage
-      }
-    });
-  } catch (error) {
-    logger.error('❌ Auth callback error:', error.message);
-    
-    if (error.response) {
-      logger.error('📋 Status:', error.response.status);
-      logger.error('📋 Data:', JSON.stringify(error.response.data));
-      logger.error('📋 Headers:', JSON.stringify(error.response.headers));
+  /**
+   * Get current user info
+   */
+  async getCurrentUser(req, res) {
+    try {
+      const user = await supabaseService.getUserById(req.user.userId);
       
-      return res.status(error.response.status).json({ 
-        error: 'Erro na autenticação com Spotify',
-        details: error.response.data 
-      });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Don't send sensitive tokens to client
+      const { spotify_access_token, spotify_refresh_token, ...safeUser } = user;
+
+      res.json({ user: safeUser });
+    } catch (error) {
+      logger.error('Error fetching current user:', error);
+      res.status(500).json({ error: 'Failed to fetch user' });
     }
-    
-    res.status(500).json({ error: 'Erro na autenticação' });
   }
-};
 
-exports.refreshAccessToken = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    
-    const decoded = TokenManager.verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      return res.status(401).json({ error: 'Refresh token inválido' });
+  /**
+   * Refresh Spotify access token
+   */
+  async refreshToken(req, res) {
+    try {
+      const user = await supabaseService.getUserById(req.user.userId);
+
+      if (!user || !user.spotify_refresh_token) {
+        return res.status(401).json({ error: 'No refresh token available' });
+      }
+
+      const { accessToken, expiresIn } = await spotifyService.refreshAccessToken(
+        user.spotify_refresh_token
+      );
+
+      const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000);
+
+      await supabaseService.updateUserTokens(
+        user.id,
+        accessToken,
+        user.spotify_refresh_token,
+        tokenExpiresAt.toISOString()
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      logger.error('Error refreshing token:', error);
+      res.status(500).json({ error: 'Failed to refresh token' });
     }
-
-    const newAccessToken = TokenManager.generateAccessToken(decoded.userId, 'demo_spotify_id');
-    
-    res.json({ accessToken: newAccessToken });
-  } catch (error) {
-    logger.error('Refresh token error:', error.message);
-    res.status(500).json({ error: 'Erro ao renovar token' });
   }
-};
 
-// Exportar dados de demo para outros controladores
-exports.DEMO_USER = DEMO_USER;
-exports.DEMO_TRACKS = DEMO_TRACKS;
-exports.DEMO_AUDIO_FEATURES = DEMO_AUDIO_FEATURES;
-exports.isDemoMode = isDemoMode;
+  /**
+   * Logout user
+   */
+  async logout(req, res) {
+    try {
+      // In a more complex setup, you might want to invalidate the JWT
+      // For now, client-side token removal is sufficient
+      res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+      logger.error('Error during logout:', error);
+      res.status(500).json({ error: 'Logout failed' });
+    }
+  }
+}
+
+module.exports = new AuthController();

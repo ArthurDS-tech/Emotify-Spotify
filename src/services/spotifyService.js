@@ -1,238 +1,358 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
-const config = require('../config/spotify');
-
-// Dados de demo
-const DEMO_TRACKS = [
-  {
-    id: 'track1',
-    name: 'Blinding Lights',
-    artists: [{ name: 'The Weeknd' }],
-    album: { name: 'After Hours' },
-    external_urls: { spotify: 'https://open.spotify.com/track/demo1' }
-  },
-  {
-    id: 'track2',
-    name: 'Watermelon Sugar', 
-    artists: [{ name: 'Harry Styles' }],
-    album: { name: 'Fine Line' },
-    external_urls: { spotify: 'https://open.spotify.com/track/demo2' }
-  },
-  {
-    id: 'track3',
-    name: 'Levitating',
-    artists: [{ name: 'Dua Lipa' }],
-    album: { name: 'Future Nostalgia' },
-    external_urls: { spotify: 'https://open.spotify.com/track/demo3' }
-  }
-];
-
-const DEMO_AUDIO_FEATURES = [
-  {
-    id: 'track1',
-    danceability: 0.514,
-    energy: 0.73,
-    valence: 0.675,
-    acousticness: 0.001,
-    instrumentalness: 0.000,
-    tempo: 171.005
-  },
-  {
-    id: 'track2',
-    danceability: 0.548,
-    energy: 0.816,
-    valence: 0.557,
-    acousticness: 0.122,
-    instrumentalness: 0.000,
-    tempo: 95.079
-  },
-  {
-    id: 'track3',
-    danceability: 0.702,
-    energy: 0.825,
-    valence: 0.915,
-    acousticness: 0.011,
-    instrumentalness: 0.000,
-    tempo: 103.0
-  }
-];
-
-const DEMO_PLAYLISTS = {
-  items: [
-    {
-      id: 'playlist1',
-      name: 'Minha Playlist Demo',
-      description: 'Playlist criada no modo demo',
-      public: true,
-      owner: { id: 'demo_user', display_name: 'Usuário Demo' },
-      tracks: { total: 15 },
-      followers: { total: 5 },
-      external_urls: { spotify: 'https://open.spotify.com/playlist/demo1' },
-      images: [{ url: 'https://via.placeholder.com/300' }]
-    }
-  ],
-  total: 1
-};
 
 class SpotifyService {
-  constructor(accessToken) {
-    this.accessToken = accessToken;
-    this.isDemoMode = accessToken === 'demo_access_token_123' || !config.clientId || config.clientId === 'demo_client_id';
-    
-    if (!this.isDemoMode) {
-      this.client = axios.create({
-        baseURL: config.baseUrl,
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+  constructor() {
+    this.baseURL = 'https://api.spotify.com/v1';
+    this.authURL = 'https://accounts.spotify.com/api/token';
+  }
+
+  /**
+   * Get authorization header
+   */
+  getAuthHeader(accessToken) {
+    return {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  /**
+   * Refresh access token
+   */
+  async refreshAccessToken(refreshToken) {
+    try {
+      const response = await axios.post(
+        this.authURL,
+        new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        }),
+        {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(
+              `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+            ).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
         }
-      });
+      );
+
+      return {
+        accessToken: response.data.access_token,
+        expiresIn: response.data.expires_in
+      };
+    } catch (error) {
+      logger.error('Error refreshing Spotify token:', error.response?.data || error.message);
+      throw new Error('Failed to refresh Spotify token');
     }
   }
 
-  async getTopTracks(period = 'medium_term', limit = 50) {
-    if (this.isDemoMode) {
-      logger.info('Retornando top tracks DEMO');
-      return DEMO_TRACKS.slice(0, Math.min(limit, DEMO_TRACKS.length));
-    }
-
+  /**
+   * Get user profile
+   */
+  async getUserProfile(accessToken) {
     try {
-      const response = await this.client.get('/me/top/tracks', {
-        params: { time_range: period, limit, offset: 0 }
+      const response = await axios.get(`${this.baseURL}/me`, {
+        headers: this.getAuthHeader(accessToken)
       });
-      return response.data.items;
+      return response.data;
     } catch (error) {
-      logger.error('Error fetching top tracks:', error.message);
+      logger.error('Error fetching user profile:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async getRecentlyPlayed(limit = 50) {
-    if (this.isDemoMode) {
-      logger.info('Retornando recently played DEMO');
-      return DEMO_TRACKS.map(track => ({ track })).slice(0, Math.min(limit, DEMO_TRACKS.length));
-    }
-
+  /**
+   * Get user's top tracks
+   * @param {string} timeRange - short_term, medium_term, or long_term
+   * @param {number} limit - Number of tracks (max 50)
+   */
+  async getTopTracks(accessToken, timeRange = 'medium_term', limit = 50) {
     try {
-      const response = await this.client.get('/me/player/recently-played', {
+      const response = await axios.get(`${this.baseURL}/me/top/tracks`, {
+        headers: this.getAuthHeader(accessToken),
+        params: { time_range: timeRange, limit }
+      });
+      return response.data.items;
+    } catch (error) {
+      logger.error('Error fetching top tracks:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's top artists
+   */
+  async getTopArtists(accessToken, timeRange = 'medium_term', limit = 50) {
+    try {
+      const response = await axios.get(`${this.baseURL}/me/top/artists`, {
+        headers: this.getAuthHeader(accessToken),
+        params: { time_range: timeRange, limit }
+      });
+      return response.data.items;
+    } catch (error) {
+      logger.error('Error fetching top artists:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get recently played tracks
+   */
+  async getRecentlyPlayed(accessToken, limit = 50) {
+    try {
+      const response = await axios.get(`${this.baseURL}/me/player/recently-played`, {
+        headers: this.getAuthHeader(accessToken),
         params: { limit }
       });
       return response.data.items;
     } catch (error) {
-      logger.error('Error fetching recently played:', error.message);
+      logger.error('Error fetching recently played:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async getAudioFeatures(trackIds) {
-    if (this.isDemoMode) {
-      logger.info('Retornando audio features DEMO');
-      return DEMO_AUDIO_FEATURES.filter(f => trackIds.includes(f.id));
-    }
-
+  /**
+   * Get audio features for multiple tracks
+   */
+  async getAudioFeatures(accessToken, trackIds) {
     try {
-      const batches = [];
-      for (let i = 0; i < trackIds.length; i += 100) {
-        batches.push(trackIds.slice(i, i + 100));
-      }
-
+      // Spotify API accepts max 100 IDs at once
+      const chunks = this.chunkArray(trackIds, 100);
       const allFeatures = [];
-      for (const batch of batches) {
-        const response = await this.client.get('/audio-features', {
-          params: { ids: batch.join(',') }
+
+      for (const chunk of chunks) {
+        const response = await axios.get(`${this.baseURL}/audio-features`, {
+          headers: this.getAuthHeader(accessToken),
+          params: { ids: chunk.join(',') }
         });
         allFeatures.push(...response.data.audio_features.filter(f => f !== null));
       }
+
       return allFeatures;
     } catch (error) {
-      logger.error('Error fetching audio features:', error.message);
+      logger.error('Error fetching audio features:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async getProfile() {
-    if (this.isDemoMode) {
-      return {
-        id: 'demo_user_123',
-        email: 'demo@example.com',
-        display_name: 'Usuário Demo',
-        images: [{ url: 'https://via.placeholder.com/150' }],
-        country: 'BR'
-      };
-    }
-
+  /**
+   * Get audio features for a single track
+   */
+  async getTrackAudioFeatures(accessToken, trackId) {
     try {
-      const response = await this.client.get('/me');
-      return response.data;
-    } catch (error) {
-      logger.error('Error fetching profile:', error.message);
-      throw error;
-    }
-  }
-
-  async createPlaylist(userId, playlistData) {
-    if (this.isDemoMode) {
-      logger.info('Criando playlist DEMO:', playlistData.name);
-      return {
-        id: 'demo_playlist_' + Date.now(),
-        name: playlistData.name,
-        description: playlistData.description,
-        public: playlistData.public,
-        owner: { id: userId, display_name: 'Usuário Demo' },
-        tracks: { total: 0 },
-        followers: { total: 0 },
-        external_urls: { spotify: 'https://open.spotify.com/playlist/demo' },
-        images: []
-      };
-    }
-
-    try {
-      const response = await this.client.post(`/users/${userId}/playlists`, {
-        name: playlistData.name,
-        description: playlistData.description || '',
-        public: playlistData.public !== undefined ? playlistData.public : true,
-        collaborative: playlistData.collaborative || false
+      const response = await axios.get(`${this.baseURL}/audio-features/${trackId}`, {
+        headers: this.getAuthHeader(accessToken)
       });
       return response.data;
     } catch (error) {
-      logger.error('Error creating playlist:', error.message);
+      logger.error('Error fetching track audio features:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async getUserPlaylists(limit = 50, offset = 0) {
-    if (this.isDemoMode) {
-      logger.info('Retornando playlists DEMO');
-      return DEMO_PLAYLISTS;
-    }
-
+  /**
+   * Get track details
+   */
+  async getTrack(accessToken, trackId) {
     try {
-      const response = await this.client.get('/me/playlists', {
+      const response = await axios.get(`${this.baseURL}/tracks/${trackId}`, {
+        headers: this.getAuthHeader(accessToken)
+      });
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching track:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get multiple tracks
+   */
+  async getTracks(accessToken, trackIds) {
+    try {
+      const chunks = this.chunkArray(trackIds, 50);
+      const allTracks = [];
+
+      for (const chunk of chunks) {
+        const response = await axios.get(`${this.baseURL}/tracks`, {
+          headers: this.getAuthHeader(accessToken),
+          params: { ids: chunk.join(',') }
+        });
+        allTracks.push(...response.data.tracks.filter(t => t !== null));
+      }
+
+      return allTracks;
+    } catch (error) {
+      logger.error('Error fetching tracks:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Search tracks
+   */
+  async searchTracks(accessToken, query, limit = 20) {
+    try {
+      const response = await axios.get(`${this.baseURL}/search`, {
+        headers: this.getAuthHeader(accessToken),
+        params: {
+          q: query,
+          type: 'track',
+          limit
+        }
+      });
+      return response.data.tracks.items;
+    } catch (error) {
+      logger.error('Error searching tracks:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's playlists
+   */
+  async getUserPlaylists(accessToken, limit = 50) {
+    try {
+      const response = await axios.get(`${this.baseURL}/me/playlists`, {
+        headers: this.getAuthHeader(accessToken),
+        params: { limit }
+      });
+      return response.data.items;
+    } catch (error) {
+      logger.error('Error fetching playlists:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a playlist
+   */
+  async createPlaylist(accessToken, userId, name, description, isPublic = false) {
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/users/${userId}/playlists`,
+        {
+          name,
+          description,
+          public: isPublic
+        },
+        { headers: this.getAuthHeader(accessToken) }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('Error creating playlist:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Add tracks to playlist
+   */
+  async addTracksToPlaylist(accessToken, playlistId, trackUris) {
+    try {
+      const chunks = this.chunkArray(trackUris, 100);
+      
+      for (const chunk of chunks) {
+        await axios.post(
+          `${this.baseURL}/playlists/${playlistId}/tracks`,
+          { uris: chunk },
+          { headers: this.getAuthHeader(accessToken) }
+        );
+      }
+      
+      return true;
+    } catch (error) {
+      logger.error('Error adding tracks to playlist:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get recommendations based on seed tracks
+   */
+  async getRecommendations(accessToken, seedTracks, targetFeatures = {}, limit = 20) {
+    try {
+      const params = {
+        seed_tracks: seedTracks.slice(0, 5).join(','),
+        limit,
+        ...targetFeatures
+      };
+
+      const response = await axios.get(`${this.baseURL}/recommendations`, {
+        headers: this.getAuthHeader(accessToken),
+        params
+      });
+      
+      return response.data.tracks;
+    } catch (error) {
+      logger.error('Error getting recommendations:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's saved tracks
+   */
+  async getSavedTracks(accessToken, limit = 50, offset = 0) {
+    try {
+      const response = await axios.get(`${this.baseURL}/me/tracks`, {
+        headers: this.getAuthHeader(accessToken),
         params: { limit, offset }
       });
-      return response.data;
+      return response.data.items;
     } catch (error) {
-      logger.error('Error fetching playlists:', error.message);
+      logger.error('Error fetching saved tracks:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async addTracksToPlaylist(playlistId, trackUris) {
-    if (this.isDemoMode) {
-      logger.info('Adicionando tracks à playlist DEMO:', playlistId);
-      return { snapshot_id: 'demo_snapshot_' + Date.now() };
-    }
-
+  /**
+   * Get current playback state
+   */
+  async getCurrentPlayback(accessToken) {
     try {
-      const response = await this.client.post(`/playlists/${playlistId}/tracks`, {
-        uris: trackUris
+      const response = await axios.get(`${this.baseURL}/me/player`, {
+        headers: this.getAuthHeader(accessToken)
       });
       return response.data;
     } catch (error) {
-      logger.error('Error adding tracks to playlist:', error.message);
+      if (error.response?.status === 204) {
+        return null; // No active playback
+      }
+      logger.error('Error fetching playback state:', error.response?.data || error.message);
       throw error;
     }
+  }
+
+  /**
+   * Utility: Chunk array into smaller arrays
+   */
+  chunkArray(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+
+  /**
+   * Format track data for storage
+   */
+  formatTrackData(track) {
+    return {
+      id: track.id,
+      name: track.name,
+      artists: track.artists.map(a => a.name).join(', '),
+      album: track.album.name,
+      albumImage: track.album.images[0]?.url || null,
+      duration: track.duration_ms,
+      popularity: track.popularity,
+      uri: track.uri,
+      previewUrl: track.preview_url
+    };
   }
 }
 
-module.exports = SpotifyService;
+module.exports = new SpotifyService();

@@ -92,54 +92,44 @@
 
 ## 🚀 **Instalação e Configuração**
 
-### **Pré-requisitos**
-- Node.js 18+ 
-- MongoDB (local ou Atlas)
-- Redis (opcional)
-- Conta de desenvolvedor do Spotify
+### **Guia Rápido (5 minutos)** ⚡
 
-### **1. Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/emotify.git
+# 1. Clone e instale
+git clone <seu-repositorio>
 cd emotify
-```
-
-### **2. Configure o Backend**
-```bash
-cd spotify-emotion-engine
 npm install
 
-# Configure as variáveis de ambiente
+# 2. Configure backend
 cp .env.example .env
-# Edite o .env com suas credenciais do Spotify
-```
+# Edite .env com suas credenciais
 
-### **3. Configure o Frontend**
-```bash
-cd Front/Spotify-frontend
+# 3. Configure frontend
+cd Front
 npm install
-
-# Configure as variáveis de ambiente
 cp .env.example .env.local
+# Edite .env.local
+
+# 4. Execute
+# Terminal 1: npm run dev
+# Terminal 2: cd Front && npm run dev
 ```
 
-### **4. Configuração do Spotify**
-1. Acesse [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Crie uma nova aplicação
-3. Configure as URLs de redirecionamento:
-   - `http://localhost:3001/api/auth/callback`
-4. Copie `Client ID` e `Client Secret` para o `.env`
+### **Documentação Completa** 📚
 
-### **5. Execute o projeto**
-```bash
-# Terminal 1 - Backend
-cd spotify-emotion-engine
-npm start
+- 📖 **[Guia Rápido](QUICKSTART.md)** - Comece em 5 minutos
+- 🚀 **[Guia Completo de Instalação](SETUP.md)** - Passo a passo detalhado
+- 📡 **[Documentação da API](API.md)** - Referência completa da API
+- 🛠️ **[Comandos Úteis](COMMANDS.md)** - Comandos para desenvolvimento
+- 📁 **[Estrutura do Projeto](STRUCTURE.md)** - Organização de pastas
+- 🚀 **[Guia de Deploy](DEPLOYMENT.md)** - Como colocar em produção
+- 🤝 **[Como Contribuir](CONTRIBUTING.md)** - Guia de contribuição
+- 📊 **[Resumo Executivo](PROJECT_SUMMARY.md)** - Visão geral técnica
 
-# Terminal 2 - Frontend  
-cd Front/Spotify-frontend
-npm run dev
-```
+### **Pré-requisitos**
+- Node.js 18+
+- Conta no [Spotify for Developers](https://developer.spotify.com/dashboard)
+- Conta no [Supabase](https://supabase.com)
 
 <div align="center">
 

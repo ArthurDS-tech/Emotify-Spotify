@@ -1,82 +1,111 @@
-const SpotifyService = require('../services/spotifyService');
-const User = require('../models/User');
+const spotifyService = require('../services/spotifyService');
+const supabaseService = require('../services/supabaseService');
+const emotionEngine = require('../services/emotionEngine');
 const logger = require('../utils/logger');
 
-exports.createPlaylist = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { name, description = '', public = true } = req.body;
+class PlaylistController {
+  async getUserPlaylists(req, res) {
+    try {
+      const user = await supabaseService.getUserById(req.user.userId);
+      const playlists = await spotifyService.getUserPlaylists(user.spotify_access_token);
 
-    if (!name) {
-      return res.status(400).json({ error: 'Nome da playlist é obrigatório' });
+      res.json({ playlists });
+    } catch (error) {
+      logger.error('Error fetching playlists:', error);
+      res.status(500).json({ error: 'Failed to fetch playlists' });
     }
-
-    // Buscar usuário e verificar token
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
-    }
-
-    // Inicializar serviço Spotify
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-
-    // Criar playlist no Spotify
-    const playlist = await spotifyService.createPlaylist(user.spotifyId, {
-      name,
-      description,
-      public
-    });
-
-    logger.info(`Playlist criada: ${playlist.name} para usuário ${user.email}`);
-
-    res.status(201).json(playlist);
-  } catch (error) {
-    logger.error('Erro ao criar playlist:', error.message);
-    res.status(500).json({ error: error.message });
   }
-};
 
-exports.getUserPlaylists = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { limit = 50, offset = 0 } = req.query;
+  async createEmotionPlaylist(req, res) {
+    try {
+      const { emotion, name, description, trackCount = 20 } = req.body;
 
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
+      if (!emotion || !name) {
+        return res.status(400).json({ error: 'Emotion and name required' });
+      }
+
+      const user = await supabaseService.getUserById(req.user.userId);
+
+      // Get user's analyzed tracks with this emotion
+      const analyses = await supabaseService.getUserEmotionAnalyses(user.id, 200);
+      const emotionTracks = analyses
+        .filter(a => a.primary_emotion === emotion)
+        .sort((a, b) => parseFloat(b.emotion_intensity) - parseFloat(a.emotion_intensity))
+        .slice(0, trackCount);
+
+      if (emotionTracks.length === 0) {
+        return res.status(404).json({ error: 'No tracks found for this emotion' });
+      }
+
+      // Create Spotify playlist
+      const spotifyProfile = await spotifyService.getUserProfile(user.spotify_access_token);
+      const playlist = await spotifyService.createPlaylist(
+        user.spotify_access_token,
+        spotifyProfile.id,
+        name,
+        description || `Playlist baseada na emoção: ${emotion}`,
+        false
+      );
+
+      // Add tracks to playlist
+      const trackUris = emotionTracks.map(t => `spotify:track:${t.track_id}`);
+      await spotifyService.addTracksToPlaylist(
+        user.spotify_access_token,
+        playlist.id,
+        trackUris
+      );
+
+      // Save to database
+      await supabaseService.createPlaylist({
+        userId: user.id,
+        spotifyPlaylistId: playlist.id,
+        name: playlist.name,
+        description: playlist.description,
+        emotionTheme: emotion,
+        isPublic: false,
+        isCollaborative: false,
+        imageUrl: playlist.images?.[0]?.url,
+        trackCount: emotionTracks.length
+      });
+
+      res.json({ playlist, trackCount: emotionTracks.length });
+    } catch (error) {
+      logger.error('Error creating emotion playlist:', error);
+      res.status(500).json({ error: 'Failed to create playlist' });
     }
-
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-    const playlists = await spotifyService.getUserPlaylists(parseInt(limit), parseInt(offset));
-
-    res.json(playlists);
-  } catch (error) {
-    logger.error('Erro ao buscar playlists:', error.message);
-    res.status(500).json({ error: error.message });
   }
-};
 
-exports.addTracksToPlaylist = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { playlistId } = req.params;
-    const { trackUris } = req.body;
+  async getRecommendations(req, res) {
+    try {
+      const { emotion, limit = 20 } = req.query;
+      const user = await supabaseService.getUserById(req.user.userId);
 
-    if (!trackUris || !Array.isArray(trackUris)) {
-      return res.status(400).json({ error: 'Lista de URIs de tracks é obrigatória' });
+      // Get seed tracks based on emotion
+      const analyses = await supabaseService.getUserEmotionAnalyses(user.id, 100);
+      const seedTracks = analyses
+        .filter(a => !emotion || a.primary_emotion === emotion)
+        .sort((a, b) => parseFloat(b.emotion_intensity) - parseFloat(a.emotion_intensity))
+        .slice(0, 5)
+        .map(a => a.track_id);
+
+      if (seedTracks.length === 0) {
+        return res.json({ recommendations: [] });
+      }
+
+      // Get recommendations from Spotify
+      const recommendations = await spotifyService.getRecommendations(
+        user.spotify_access_token,
+        seedTracks,
+        {},
+        parseInt(limit)
+      );
+
+      res.json({ recommendations });
+    } catch (error) {
+      logger.error('Error getting recommendations:', error);
+      res.status(500).json({ error: 'Failed to get recommendations' });
     }
-
-    const user = await User.findById(userId);
-    if (!user || !user.spotifyAccessToken) {
-      return res.status(401).json({ error: 'Token Spotify não encontrado' });
-    }
-
-    const spotifyService = new SpotifyService(user.spotifyAccessToken);
-    const result = await spotifyService.addTracksToPlaylist(playlistId, trackUris);
-
-    res.json(result);
-  } catch (error) {
-    logger.error('Erro ao adicionar tracks à playlist:', error.message);
-    res.status(500).json({ error: error.message });
   }
-};
+}
+
+module.exports = new PlaylistController();
